@@ -7,6 +7,22 @@ Every release is a single entry here. The version in this file, the version in
 Semantic versioning: `MAJOR` breaks an existing workflow, `MINOR` adds a
 capability, `PATCH` fixes behaviour without changing the interface.
 
+## [0.7.14] - 2026-11-11
+
+### Added
+
+- **Optional AI troubleshooting.** Configure OpenAI-compatible providers in the
+  app, save keys in the operating-system secure store when available, and set a
+  fallback order. Only providers the user enables and marks no-cost are tried;
+  questions and recent project evidence are sent only after per-request consent.
+- **Reviewed file-repair proposals.** The user can select one safe project text
+  file and receive a complete before/after proposal. Applying it requires
+  explicit confirmation, verifies the file has not changed, and keeps a backup.
+  Suggested terminal commands are displayed but never executed automatically.
+- **Credential and data safeguards.** Provider keys are not written to settings
+  or returned to the page. Secret files, likely credential content, non-UTF-8
+  files, unsafe paths, and stale repair previews are rejected.
+
 ## [0.7.13] - 2026-11-11
 
 ### Added

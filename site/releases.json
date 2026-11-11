@@ -1,7 +1,7 @@
 {
-  "version": "0.7.13",
+  "version": "0.7.14",
   "releasedAt": "2026-11-11",
-  "releaseNotes": "Added My GitHub public repository discovery and corrected platform/security guidance. This release has Windows installers; Linux and macOS native packages remain pending.",
+  "releaseNotes": "Optional AI troubleshooting and reviewed file-repair proposals",
   "installGuide": "download.html",
   "links": {
     "github": "https://github.com/matheus-uxdd33/guitinstal",
@@ -17,22 +17,22 @@
       "files": [
         {
           "kind": "setup",
-          "name": "GUITinstal-0.7.13-Setup-x64.exe",
-          "url": "https://github.com/matheus-uxdd33/guitinstal/releases/download/v0.7.13/GUITinstal-0.7.13-Setup-x64.exe",
-          "size": 121853583,
+          "name": "GUITinstal-0.7.14-Setup-x64.exe",
+          "url": "https://github.com/matheus-uxdd33/guitinstal/releases/download/v0.7.14/GUITinstal-0.7.14-Setup-x64.exe",
+          "size": 121864993,
           "sizeLabel": "116.2 MB",
-          "sha256": "f5324382c4c04ec65b6be8f6aac39d59d52ee3f6422847a9fadcdd98a4517dbc",
-          "builtAt": "2026-11-11T14:09:19.186Z",
+          "sha256": "bc4ff5b6af24251fc8056be9b15c361a7750a34d0b3ffdee290adcde246cc8df",
+          "builtAt": "2026-11-11T15:15:28.179Z",
           "recommended": true
         },
         {
           "kind": "portable",
-          "name": "GUITinstal-0.7.13-Portable-x64.exe",
-          "url": "https://github.com/matheus-uxdd33/guitinstal/releases/download/v0.7.13/GUITinstal-0.7.13-Portable-x64.exe",
-          "size": 110621708,
+          "name": "GUITinstal-0.7.14-Portable-x64.exe",
+          "url": "https://github.com/matheus-uxdd33/guitinstal/releases/download/v0.7.14/GUITinstal-0.7.14-Portable-x64.exe",
+          "size": 110632155,
           "sizeLabel": "105.5 MB",
-          "sha256": "732a9028d283d9eaf7d35335a21035087fa8c16c3bd287a1a04a687dc4d26073",
-          "builtAt": "2026-11-11T14:11:37.827Z",
+          "sha256": "f1861d1853e73785b98f1ca46a7b2540d1bffa291392a6145bff600d3f76761f",
+          "builtAt": "2026-11-11T15:17:42.865Z",
           "recommended": false
         }
       ]

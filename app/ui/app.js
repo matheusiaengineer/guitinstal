@@ -279,6 +279,9 @@
       $('#autoApproveToggle').checked = Boolean(data.settings.autoApproveLowRisk);
       $('#themeSelect').value = data.settings.theme || 'dark';
       $('#dataPathLabel').textContent = `${data.library.engine} library: ${data.library.projects} saved project${data.library.projects === 1 ? '' : 's'}. Database: ${data.library.path}`;
+      loadAiProviders().catch((error) => {
+        $('#aiProviderStatus').textContent = error.message;
+      });
 
       const pill = $('#tokenPill');
       pill.textContent = data.settings.githubTokenSet ? 'GitHub: signed in' : 'GitHub: not signed in';
@@ -945,11 +948,18 @@
   // The panel answers from evidence the server already holds, so it needs to know
   // which context the user is looking at: the plan just analyzed, or one project.
   const ask = { context: null };
+  let aiProviders = [];
+  let repairProposal = null;
 
   function setAskContext(context, label) {
     ask.context = context;
     $('#askScope').textContent = label;
     $('#askAnswer').innerHTML = '';
+    $('#repairPanel').hidden = !context?.projectId;
+    $('#repairPreview').hidden = true;
+    $('#repairStatus').textContent = '';
+    repairProposal = null;
+    updateRepairButton();
   }
 
   async function askQuestion() {
@@ -962,7 +972,10 @@
     const button = $('#askButton');
     button.disabled = true;
     try {
-      const result = await api('/api/assistant', { method: 'POST', body: { question, ...(ask.context || {}) } });
+      const result = await api('/api/assistant', {
+        method: 'POST',
+        body: { question, ...(ask.context || {}), useAI: $('#askSendContext').checked },
+      });
       const answer = result.answer;
       $('#askProviderNote').textContent = answer.provider.note;
       if (answer.scope) $('#askScope').textContent = answer.scope;
@@ -977,6 +990,120 @@
           .join('');
     } catch (error) {
       list.innerHTML = `<li class="ask-line">${esc(error.message)}</li>`;
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  function updateRepairButton() {
+    const hasFreeProvider = aiProviders.some((provider) => provider.enabled && provider.noCost && provider.hasApiKey);
+    $('#repairButton').disabled = !hasFreeProvider || !ask.context?.projectId || !$('#repairConsent').checked;
+  }
+
+  function renderAiProviders(providers) {
+    aiProviders = Array.isArray(providers) ? providers : [];
+    const list = $('#aiProviderList');
+    if (!aiProviders.length) {
+      list.innerHTML = '<p class="panel-hint">No AI providers configured. Add an OpenAI-compatible provider and mark it no-cost to enable AI assistance.</p>';
+    } else {
+      list.innerHTML = aiProviders
+        .map((provider, index) => {
+          const eligibility = provider.enabled && provider.noCost && provider.hasApiKey
+            ? 'Enabled for no-cost fallback'
+            : provider.hasApiKey
+              ? 'Saved, but not eligible for fallback'
+              : 'API key missing';
+          return `<article class="ai-provider-card">
+            <strong>${esc(provider.name)}${provider.noCost ? ' · marked no-cost' : ''}</strong>
+            <small>${esc(provider.model)} · ${esc(provider.baseUrl)}<br>${esc(eligibility)}${provider.credentialStorage ? ` · ${esc(provider.credentialStorage)}` : ''}${provider.credentialNote ? `<br>${esc(provider.credentialNote)}` : ''}</small>
+            <div class="button-row">
+              <button class="button button-ghost" type="button" data-ai-provider-action="up" data-id="${esc(provider.id)}" ${index === 0 ? 'disabled' : ''}>Move up</button>
+              <button class="button button-ghost" type="button" data-ai-provider-action="down" data-id="${esc(provider.id)}" ${index === aiProviders.length - 1 ? 'disabled' : ''}>Move down</button>
+              <button class="button button-ghost" type="button" data-ai-provider-action="edit" data-id="${esc(provider.id)}">Edit</button>
+              <button class="button button-ghost" type="button" data-ai-provider-action="remove" data-id="${esc(provider.id)}">Remove</button>
+            </div>
+          </article>`;
+        })
+        .join('');
+    }
+    updateRepairButton();
+  }
+
+  async function loadAiProviders() {
+    const result = await api('/api/ai/providers');
+    renderAiProviders(result.providers);
+  }
+
+  function resetAiProviderForm() {
+    $('#aiProviderForm').reset();
+    $('#aiProviderId').value = '';
+    $('#aiProviderKey').placeholder = 'Stored securely; never shown again';
+    $('#aiProviderSave').textContent = 'Save provider';
+    $('#aiProviderCancel').hidden = true;
+  }
+
+  function showRepairProposal(result) {
+    repairProposal = { ...result, projectId: ask.context.projectId };
+    $('#repairSummary').textContent = result.summary;
+    $('#repairExplanation').textContent = `${result.explanation}\n\nProvider: ${result.provider.name} (${result.provider.model}). No file has been changed.`;
+    $('#repairBefore').textContent = result.originalContent;
+    $('#repairAfter').textContent = result.replacement;
+    const commands = $('#repairCommands');
+    commands.hidden = !result.commands.length;
+    commands.textContent = result.commands.length
+      ? `Suggested terminal commands (not run):\n${result.commands.map((command) => `- ${command}`).join('\n')}`
+      : '';
+    $('#repairPreview').hidden = false;
+  }
+
+  async function proposeFileRepair() {
+    if (!ask.context?.projectId || !$('#repairConsent').checked) return;
+    const button = $('#repairButton');
+    button.disabled = true;
+    $('#repairStatus').textContent = 'Reading the selected file and asking a configured no-cost provider…';
+    $('#repairPreview').hidden = true;
+    try {
+      const question = $('#askInput').value.trim() || 'Explain the latest error and suggest a minimal repair.';
+      const result = await api('/api/assistant/repair-proposal', {
+        method: 'POST',
+        body: {
+          projectId: ask.context.projectId,
+          filePath: $('#repairPath').value.trim(),
+          question,
+          sendFile: true,
+        },
+      });
+      showRepairProposal(result);
+      $('#repairStatus').textContent = 'Review the complete before/after contents. The app has not changed the file.';
+    } catch (error) {
+      $('#repairStatus').textContent = error.message;
+    } finally {
+      updateRepairButton();
+    }
+  }
+
+  async function applyFileRepair() {
+    if (!repairProposal) return;
+    if (!window.confirm(`Apply the reviewed change to ${repairProposal.filePath}? A backup will be kept in the project.`)) return;
+    const button = $('#repairApply');
+    button.disabled = true;
+    try {
+      const result = await api('/api/assistant/apply-repair', {
+        method: 'POST',
+        body: {
+          approved: true,
+          projectId: repairProposal.projectId,
+          filePath: repairProposal.filePath,
+          expectedSha256: repairProposal.expectedSha256,
+          replacement: repairProposal.replacement,
+        },
+      });
+      $('#repairStatus').textContent = `Applied ${result.relativePath}. Backup: ${result.backupPath}. Run the suggested command yourself in the project terminal when ready.`;
+      $('#repairPreview').hidden = true;
+      repairProposal = null;
+      await loadState();
+    } catch (error) {
+      $('#repairStatus').textContent = error.message;
     } finally {
       button.disabled = false;
     }
@@ -1765,6 +1892,87 @@
   $('#askForm').addEventListener('submit', (event) => {
     event.preventDefault();
     askQuestion();
+  });
+
+  $('#repairConsent').addEventListener('change', updateRepairButton);
+  $('#repairButton').addEventListener('click', proposeFileRepair);
+  $('#repairApply').addEventListener('click', applyFileRepair);
+  $('#repairDiscard').addEventListener('click', () => {
+    repairProposal = null;
+    $('#repairPreview').hidden = true;
+    $('#repairStatus').textContent = 'Proposal discarded; no file was changed.';
+  });
+  $('#repairTerminal').addEventListener('click', () => {
+    if (ask.context?.projectId) projectAction('terminal', ask.context.projectId);
+  });
+
+  $('#aiProviderForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = $('#aiProviderSave');
+    button.disabled = true;
+    $('#aiProviderStatus').textContent = 'Saving provider settings securely…';
+    try {
+      const result = await api('/api/ai/providers', {
+        method: 'POST',
+        body: {
+          id: $('#aiProviderId').value || undefined,
+          name: $('#aiProviderName').value.trim(),
+          baseUrl: $('#aiProviderUrl').value.trim(),
+          model: $('#aiProviderModel').value.trim(),
+          apiKey: $('#aiProviderKey').value,
+          noCost: $('#aiProviderNoCost').checked,
+          enabled: $('#aiProviderEnabled').checked,
+        },
+      });
+      $('#aiProviderKey').value = '';
+      resetAiProviderForm();
+      await loadAiProviders();
+      $('#aiProviderStatus').textContent = result.provider.credentialNote ||
+        (result.provider.hasApiKey ? 'Provider saved. The key is not shown again.' : 'Provider saved.');
+    } catch (error) {
+      $('#aiProviderStatus').textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  $('#aiProviderCancel').addEventListener('click', resetAiProviderForm);
+  $('#aiProviderList').addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-ai-provider-action]');
+    if (!button) return;
+    const provider = aiProviders.find((item) => item.id === button.dataset.id);
+    if (!provider) return;
+    const action = button.dataset.aiProviderAction;
+    try {
+      if (action === 'edit') {
+        $('#aiProviderId').value = provider.id;
+        $('#aiProviderName').value = provider.name;
+        $('#aiProviderUrl').value = provider.baseUrl;
+        $('#aiProviderModel').value = provider.model;
+        $('#aiProviderKey').value = '';
+        $('#aiProviderKey').placeholder = provider.hasApiKey ? 'Leave blank to keep saved key' : 'Enter an API key';
+        $('#aiProviderNoCost').checked = provider.noCost;
+        $('#aiProviderEnabled').checked = provider.enabled;
+        $('#aiProviderSave').textContent = 'Update provider';
+        $('#aiProviderCancel').hidden = false;
+        $('#aiProviderName').focus();
+      } else if (action === 'remove') {
+        if (!window.confirm(`Remove ${provider.name} and its saved API key?`)) return;
+        await api(`/api/ai/providers/${encodeURIComponent(provider.id)}`, { method: 'DELETE' });
+        await loadAiProviders();
+        if ($('#aiProviderId').value === provider.id) resetAiProviderForm();
+      } else if (action === 'up' || action === 'down') {
+        const ids = aiProviders.map((item) => item.id);
+        const index = ids.indexOf(provider.id);
+        const target = action === 'up' ? index - 1 : index + 1;
+        if (target < 0 || target >= ids.length) return;
+        [ids[index], ids[target]] = [ids[target], ids[index]];
+        const result = await api('/api/ai/providers/reorder', { method: 'POST', body: { ids } });
+        renderAiProviders(result.providers);
+      }
+    } catch (error) {
+      $('#aiProviderStatus').textContent = error.message;
+    }
   });
 
   $('#discoverFilters').addEventListener('click', (event) => {

@@ -914,3 +914,72 @@ select.text-input { height: 42px; }
   padding-left: 24px;
   word-break: break-word;
 }
+
+.ai-provider-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ai-provider-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  padding: 10px 12px;
+}
+
+.ai-provider-card strong,
+.repair-preview-grid strong {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.ai-provider-card small {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+
+.ai-provider-card .button-row {
+  gap: 6px;
+}
+
+.repair-panel {
+  margin-top: 16px;
+}
+
+.repair-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.repair-preview-grid pre {
+  max-height: 360px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--text);
+  font: 11px/1.5 var(--mono);
+}
+
+.repair-commands {
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0 0 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--text);
+}

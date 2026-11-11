@@ -44,7 +44,7 @@
       <section class="doc-hero section-wrap">
         <span class="section-kicker">INSTALL GUIDE · v<span id="metaVersion">—</span></span>
         <h1>What actually happens after you press download.</h1>
-        <p class="doc-lede">GUITinstal is a desktop app that runs on your machine. It reads a public GitHub repository, detects the stack, writes an installation plan, and executes each command <b>only after you approve it</b>. Nothing is installed silently, and nothing runs in the cloud.</p>
+        <p class="doc-lede">GUITinstal is a desktop app that runs on your machine. It reads a public GitHub repository, detects the stack, writes an installation plan, and executes each command <b>only after you approve it</b>. Nothing is installed silently or executed in the cloud. The optional AI assistant sends only the question and recent project evidence you approve, and sends a selected file only when you request a repair.</p>
         <div class="hero-buttons">
           <a class="button button-light" href="index.html#download" data-download="windows"><svg><use href="#i-download"/></svg> Download for Windows</a>
           <a class="button button-outline" href="#steps">See the whole flow <svg><use href="#i-arrow-right"/></svg></a>
@@ -159,7 +159,7 @@
           <div class="split-col">
             <h3><svg><use href="#i-circle-help"/></svg> What it does not</h3>
             <ul class="cross-list">
-              <li>It never uploads your code or project list. There is no telemetry or GUITinstal cloud account. If you connect GitHub, the token is sent directly to GitHub over HTTPS for public API requests.</li>
+              <li>It has no telemetry or GUITinstal cloud account. By default, assistant questions use local evidence. If you opt in, the question and recent project logs/metadata are sent to enabled AI providers you marked no-cost; a repair request also sends the selected file. The app cannot verify provider pricing or quotas. If you connect GitHub, the token is sent directly to GitHub over HTTPS for public API requests.</li>
               <li>It does not listen on your LAN or the internet, so other devices on your network cannot reach it.</li>
               <li>It does not install anything before you approve. There is no background updater and no scheduled job.</li>
               <li>It does not request or access private GitHub repositories, and does not accept repository URLs from other git hosts.</li>

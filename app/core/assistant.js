@@ -1,12 +1,12 @@
 'use strict';
 
 /**
- * The answers behind the "Ask GUITinstal" panel.
+ * The local fallback answers behind the "Ask GUITinstal" panel.
  *
- * No model is called and no provider is configured: every sentence is built from
- * evidence this machine already holds - the install plan, the project record, the
- * logs on disk, GitHub metadata. When that evidence cannot answer a question the
- * panel says so instead of inventing one, which is the whole point of the product.
+ * Every fallback sentence is built from evidence this machine already holds -
+ * the install plan, the project record, the logs on disk, and GitHub metadata.
+ * The optional external AI path lives in core/ai.js and only runs after explicit
+ * per-request consent.
  */
 
 const TOPICS = [

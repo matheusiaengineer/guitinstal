@@ -81,7 +81,7 @@ const SECURITY = [
     rule: 'Nothing about the machine leaves it without being asked.',
     enforcedBy: 'core/assistant.js',
     status: 'implemented',
-    detail: 'The assistant answers from the plan, the project record and the logs on disk. No model is called and nothing is sent anywhere.',
+    detail: 'The assistant uses local plan, project and log evidence by default. External AI is optional and requires explicit per-request consent.',
   },
   {
     id: 'safe-cancellation',

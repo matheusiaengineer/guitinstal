@@ -31,8 +31,12 @@ node app/tools/serve-site.js 4173  # preview the website
 > the exact command line first. Progress streams into a live console, and every run is
 > recorded per project so you can retry a failed step instead of starting over.
 >
-> The projects and their library stay on your machine. There is no telemetry or
-> GUITinstal cloud service. GitHub sign-in is optional, raises the public API
+> Projects and their library stay on your machine; there is no telemetry or
+> GUITinstal cloud service. The assistant answers locally by default. If you
+> explicitly opt in for a question, its text and recent project logs/metadata
+> are sent to enabled AI providers you marked no-cost. A file-repair request
+> also sends the one file you select. GUITinstal cannot verify a provider's
+> pricing or free quota. GitHub sign-in is optional, raises the public API
 > limit and adds a view of your public repositories; it does not request access
 > to private repositories. GUITinstal talks
 > to GitHub over HTTPS, writes its plan, and shells out to

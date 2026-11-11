@@ -192,8 +192,10 @@ enforced. Two are not, and they say so:
 The local server binds to `127.0.0.1` on a random port and every request needs
 the per-session token. The GitHub token is sealed with Windows DPAPI for this
 user only; on other systems it lives in memory for the session and the app says
-so. The assistant answers from local evidence only: no model is called and
-nothing leaves the machine.
+so. The assistant answers from local evidence by default. Optional external AI
+providers are called only after per-request consent; a repair request additionally
+sends the selected project file. Provider pricing and free quotas are not verified
+by the app.
 
 ## API
 

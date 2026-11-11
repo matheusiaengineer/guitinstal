@@ -37,6 +37,7 @@ O endereço aparece no terminal (ex.: `http://127.0.0.1:52310`) e é gravado em 
 - **Sem shell.** Todos os comandos são executados com array de argumentos e `shell: false`. O conteúdo do repositório nunca é interpretado como sintaxe de shell. No Windows, o npm roda como `node npm-cli.js` justamente para não passar pelo `npm.cmd`.
 - **Só GitHub.** Só URLs do github.com são aceitas.
 - **Aprovação obrigatória.** O motor só executa um passo depois que ele foi aprovado explicitamente.
+- **IA opcional e consentida.** O assistente responde com evidências locais por padrão. Se você habilitar o envio para um provedor configurado como sem custo, a pergunta e os logs/metadados recentes do projeto serão enviados; o reparo também envia o arquivo que você selecionar. O app não verifica preços ou cotas do provedor. A proposta precisa ser revisada e aprovada antes de alterar o arquivo.
 - **Verificação de disco.** Antes de instalar, o app confere o espaço livre na pasta de trabalho e avisa (ou bloqueia) se estiver crítico.
 - **Risco rotulado.** Todo passo exibe seu nível de risco: baixo, médio ou alto.
 
@@ -69,7 +70,7 @@ O núcleo (`core/`) não sabe nada sobre HTTP nem sobre o navegador: é por isso
 
 ## Configurações
 
-Em *Configurações*: pasta de trabalho, conexão opcional com GitHub (aumenta o limite da API de 60 para 5000 requisições/hora), clone raso, aprovação automática de passos de baixo risco e tema. A conexão usa o Device Flow oficial e não pede acesso a repositórios privados. Depois de conectar, a aba *My GitHub* em Discover mostra até 100 repositórios públicos da conta, ordenados por atualização.
+Em *Configurações*: pasta de trabalho, conexão opcional com GitHub (aumenta o limite da API de 60 para 5000 requisições/hora), provedores opcionais de IA compatíveis com OpenAI, clone raso, aprovação automática de passos de baixo risco e tema. As chaves de IA ficam separadas da configuração e são guardadas no armazenamento seguro do sistema quando disponível; nunca são devolvidas à interface. Configure somente provedores que você verificou como sem custo e escolha sua ordem de fallback. O app não valida preços ou cotas. A conexão do GitHub usa o Device Flow oficial e não pede acesso a repositórios privados. Depois de conectar, a aba *My GitHub* em Discover mostra até 100 repositórios públicos da conta, ordenados por atualização.
 
 Em uma instalação nova, a pasta de trabalho padrão é `Desktop\Repositories` (ou `~/GUITinstal-workspace` quando não existe pasta Desktop). A galeria sempre varre a raiz configurada e, se existir, a pasta legada `.guitinstal-workspace` dentro dela: assim os clones feitos por versões antigas continuam visíveis mesmo depois de mudar a pasta de trabalho.
 

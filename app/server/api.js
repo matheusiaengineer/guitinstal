@@ -23,7 +23,14 @@ const {
 } = require('../core/store');
 const { defaultWorkspace, userDataDir } = require('../core/paths');
 const changelog = require('../core/changelog');
-const { explain } = require('../core/assistant');
+const { answerWithAI, suggestFileRepair } = require('../core/ai');
+const {
+  listAiProviders,
+  removeAiProvider,
+  reorderAiProviders,
+  saveAiProvider,
+} = require('../core/ai-providers');
+const { applyProjectFile, readProjectFile } = require('../core/file-repair');
 const {
   browseRepos,
   fetchCommits,
@@ -856,6 +863,35 @@ const routes = [
     },
   },
   {
+    method: 'GET',
+    path: /^\/api\/ai\/providers$/,
+    handler: async () => ({ providers: listAiProviders() }),
+  },
+  {
+    method: 'POST',
+    path: /^\/api\/ai\/providers$/,
+    handler: async (req) => {
+      const body = await readJsonBody(req);
+      return { provider: saveAiProvider(body) };
+    },
+  },
+  {
+    method: 'POST',
+    path: /^\/api\/ai\/providers\/reorder$/,
+    handler: async (req) => {
+      const body = await readJsonBody(req);
+      return { providers: reorderAiProviders(body.ids) };
+    },
+  },
+  {
+    method: 'DELETE',
+    path: /^\/api\/ai\/providers\/([\w-]+)$/,
+    handler: async (req, params) => {
+      removeAiProvider(params[0]);
+      return { ok: true };
+    },
+  },
+  {
     method: 'POST',
     path: /^\/api\/github-auth\/start$/,
     handler: async () => {
@@ -972,7 +1008,47 @@ const routes = [
         if (!plan) throw new Error('That analysis is no longer in memory. Analyze the repository again.');
         context = { plan };
       }
-      return { answer: explain(question, context), question };
+      return { answer: await answerWithAI(question, context, body.useAI === true), question };
+    },
+  },
+  {
+    method: 'POST',
+    path: /^\/api\/assistant\/repair-proposal$/,
+    handler: async (req) => {
+      const body = await readJsonBody(req);
+      if (body.sendFile !== true) throw new Error('Confirm that you want to send this selected file to a configured no-cost provider.');
+      const project = findProject(String(body.projectId || ''));
+      const file = readProjectFile(project.dir, body.filePath);
+      const context = {
+        project,
+        log: projectLog(project),
+        verify: project.verify || (await verifyInstall(project.dir)),
+      };
+      const proposal = await suggestFileRepair({
+        question: String(body.question || 'Explain the error and repair this file').slice(0, 300),
+        context,
+        relativePath: file.relativePath,
+        content: file.content,
+      });
+      return {
+        ...proposal,
+        filePath: file.relativePath,
+        originalContent: file.content,
+        expectedSha256: file.sha256,
+      };
+    },
+  },
+  {
+    method: 'POST',
+    path: /^\/api\/assistant\/apply-repair$/,
+    handler: async (req) => {
+      const body = await readJsonBody(req);
+      if (body.approved !== true) throw new Error('Approve the proposed change before applying it.');
+      const project = findProject(String(body.projectId || ''));
+      return {
+        ok: true,
+        ...applyProjectFile(project.dir, body.filePath, body.expectedSha256, body.replacement),
+      };
     },
   },
   {
