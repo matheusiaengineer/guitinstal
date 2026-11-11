@@ -33,9 +33,9 @@ node app/tools/serve-site.js 4173  # preview the website
 >
 > Projects and their library stay on your machine; there is no telemetry or
 > GUITinstal cloud service. The assistant answers locally by default. If you
-> explicitly opt in for a question, its text and recent project logs/metadata
-> are sent to enabled AI providers you marked no-cost. A file-repair request
-> also sends the one file you select. GUITinstal cannot verify a provider's
+> explicitly opt in for a question, its text, detected project details, relevant
+> README instructions, and recent logs are sent to enabled AI providers you marked
+> no-cost. A file-repair request also sends the one file you select. GUITinstal cannot verify a provider's
 > pricing or free quota. GitHub sign-in is optional, raises the public API
 > limit and adds a view of your public repositories; it does not request access
 > to private repositories. GUITinstal talks

@@ -27,7 +27,7 @@ O endereço aparece no terminal (ex.: `http://127.0.0.1:52310`) e é gravado em 
 3. **Monta o plano** — clone, ambiente virtual, instalação de dependências, build e inicialização. Cada passo mostra exatamente o comando que vai rodar, para que serve e qual o risco.
 4. **Você aprova** — nada executa sem confirmação. Dá para aprovar passo a passo ou o plano inteiro de uma vez, pular passos opcionais e cancelar a qualquer momento.
 5. **Executa de verdade** — `git clone`, `npm install`, `pip install`, `docker compose`, `cargo build`… rodam de fato, com a saída aparecendo ao vivo no console.
-6. **Organiza e executa** — o projeto entra em *Meus projetos*, com o comando de inicialização guardado. Clique em **Run** para iniciar; apps web abrem no navegador automaticamente. Também dá para parar, abrir de novo, ver o log, atualizar (`git pull --ff-only`), abrir a pasta e remover do registro.
+6. **Organiza e executa** — o projeto entra em *Meus projetos*, com o comando de inicialização guardado. Clique em **Guide** para o assistente ler localmente o manifesto, os scripts e as instruções de execução do README; ele explica como abrir e qual comando GUITinstal usará. Clique em **Run** para iniciar; apps web abrem no navegador automaticamente. Também dá para parar, ver o log, atualizar (`git pull --ff-only`), abrir a pasta e remover do registro.
 7. **Adota o que já está no disco** — a *Galeria de repositórios* varre a pasta de trabalho (e a antiga `.guitinstal-workspace`) e lista todo repositório Git baixado, inclusive os de instalações interrompidas. *Adicionar a Meus projetos* registra a pasta sem clonar de novo e detecta o comando de início a partir dos arquivos locais.
 
 ## Segurança
@@ -37,7 +37,7 @@ O endereço aparece no terminal (ex.: `http://127.0.0.1:52310`) e é gravado em 
 - **Sem shell.** Todos os comandos são executados com array de argumentos e `shell: false`. O conteúdo do repositório nunca é interpretado como sintaxe de shell. No Windows, o npm roda como `node npm-cli.js` justamente para não passar pelo `npm.cmd`.
 - **Só GitHub.** Só URLs do github.com são aceitas.
 - **Aprovação obrigatória.** O motor só executa um passo depois que ele foi aprovado explicitamente.
-- **IA opcional e consentida.** O assistente responde com evidências locais por padrão. Se você habilitar o envio para um provedor configurado como sem custo, a pergunta e os logs/metadados recentes do projeto serão enviados; o reparo também envia o arquivo que você selecionar. O app não verifica preços ou cotas do provedor. A proposta precisa ser revisada e aprovada antes de alterar o arquivo.
+- **IA opcional e consentida.** O guia de projeto lê localmente os manifestos, scripts, trechos de execução do README e logs. Se você habilitar o envio para um provedor configurado como sem custo, a pergunta e esse contexto selecionado serão enviados; o reparo também envia o arquivo que você escolher. O app não verifica preços ou cotas do provedor. A proposta precisa ser revisada e aprovada antes de alterar o arquivo.
 - **Verificação de disco.** Antes de instalar, o app confere o espaço livre na pasta de trabalho e avisa (ou bloqueia) se estiver crítico.
 - **Risco rotulado.** Todo passo exibe seu nível de risco: baixo, médio ou alto.
 

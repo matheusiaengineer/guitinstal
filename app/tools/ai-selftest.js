@@ -15,6 +15,7 @@ async function main() {
     const providers = require('../core/ai-providers');
     const { answerWithAI, suggestFileRepair } = require('../core/ai');
     const { applyProjectFile, readProjectFile } = require('../core/file-repair');
+    const { projectGuide } = require('../core/project-guide');
     const secretStore = require('../core/secret-store');
 
     secretStore.save('github-selftest-token');
@@ -63,7 +64,7 @@ async function main() {
 
     let attempts = [];
     global.fetch = async (url, options) => {
-      attempts.push({ url: String(url), model: JSON.parse(options.body).model });
+      attempts.push({ url: String(url), model: JSON.parse(options.body).model, body: options.body });
       if (String(url).startsWith('https://first.example/')) {
         return { ok: false, status: 429, json: async () => ({}) };
       }
@@ -88,6 +89,33 @@ async function main() {
     fs.writeFileSync(path.join(project, 'src', 'app.js'), "console.log('old');\n", 'utf8');
     fs.writeFileSync(path.join(project, '.env'), 'TOKEN=secret-value\n', 'utf8');
     fs.writeFileSync(path.join(project, 'src', 'invalid.bin'), Buffer.from([0xff]));
+    fs.writeFileSync(
+      path.join(project, 'package.json'),
+      JSON.stringify({ scripts: { start: 'node src/app.js', dev: 'node src/app.js' } }),
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(project, 'README.md'),
+      '# Demo\n\n## Getting Started\nInstall dependencies with npm install.\nRun locally with npm run dev.\nAPI_KEY=top-secret-value\n',
+      'utf8'
+    );
+    const guide = projectGuide(project);
+    assert.equal(guide.stack, 'Node.js');
+    assert.equal(guide.scripts.dev, 'node src/app.js');
+    assert.match(guide.readmeInstructions, /npm run dev/);
+    assert.doesNotMatch(guide.readmeInstructions, /top-secret-value/);
+    const guideContext = {
+      project: { fullName: 'demo/project', dir: project, stackLabel: 'Node.js', launch: { command: 'npm start' } },
+      guide,
+    };
+    const localGuide = await answerWithAI('How do I open and run this project?', guideContext, false);
+    assert.ok(localGuide.lines.some((line) => line.includes('README')));
+    assert.equal(attempts.length, 2);
+    await answerWithAI('How do I open and run this project?', guideContext, true);
+    assert.ok(attempts.slice(2).some((attempt) => attempt.body.includes('npm run dev')));
+    assert.ok(attempts.slice(2).every((attempt) => !attempt.body.includes('top-secret-value')));
+    console.log('ok   scans project launch guidance locally and shares it only with consent');
+
     const selected = readProjectFile(project, 'src/app.js');
     assert.equal(selected.content, "console.log('old');\n");
     assert.throws(() => readProjectFile(project, '../outside.txt'), /outside the project|normal project file path/);
@@ -138,7 +166,7 @@ async function main() {
     providers.removeAiProvider(paid.id);
     providers.removeAiProvider(first.id);
     providers.removeAiProvider(second.id);
-    console.log('\nAI assistant self-test: 6/6 checks passed');
+    console.log('\nAI assistant self-test: 7/7 checks passed');
   } finally {
     global.fetch = originalFetch;
     if (originalUserData === undefined) delete process.env.GUITINSTAL_USER_DATA;

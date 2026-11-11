@@ -120,7 +120,7 @@ function fromPlan(plan, topic) {
 }
 
 /** A project already on disk: the record, the files, and the real log tail. */
-function fromProject(project, topic, log, verify) {
+function fromProject(project, topic, log, verify, guide = {}) {
   const lines = [];
 
   if (topic === 'explain') {
@@ -136,9 +136,18 @@ function fromProject(project, topic, log, verify) {
   }
 
   if (topic === 'run') {
+    if (guide.stack) lines.push(bullet(`Folder scan: detected ${guide.stack}${guide.markers?.length ? ` from ${guide.markers.join(', ')}` : ''}.`));
     lines.push(bullet(project.pid ? `It is running now (process ${project.pid}).` : 'It is not running.'));
     if (project.localUrl) lines.push(bullet(`It answers on ${project.localUrl} - that address comes from its own log.`));
     lines.push(bullet(launchLine(project.launch)));
+    if (Object.keys(guide.scripts || {}).length) {
+      const scripts = Object.entries(guide.scripts).map(([name, command]) => `${name}: ${command}`);
+      lines.push(bullet(`Project scripts found (not run): ${scripts.join('; ')}.`));
+    }
+    if (guide.readmeInstructions) {
+      lines.push(bullet(`Opening guidance from ${guide.readmeFile || 'README'} (documentation only): ${guide.readmeInstructions.replace(/\s+/g, ' ').slice(0, 1400)}`));
+    }
+    lines.push(bullet('Use GUITinstal’s Run button to start the saved launch command. The app does not run README commands automatically.'));
   }
 
   if (topic === 'error') {
@@ -170,7 +179,7 @@ function unknownTopic(project, plan) {
   const name = (project && project.fullName) || (plan && plan.repo && plan.repo.fullName) || 'this repository';
   return [
     `- This panel answers questions about ${name} on five topics: what it is, what it needs, how it runs, why something failed, and what is approved before a command runs.`,
-    '- It is not a chat model. No AI provider is configured in this build, so nothing here was generated from a prompt and no text from your machine was sent to a service.',
+    '- Project guidance is built from local files, detected launch details, and logs. Optional external AI is used only when you enable it for a specific question.',
     '- Ask with words like "explain", "requirements", "how do I run it", "why did it fail" or "is this safe".',
   ];
 }
@@ -187,7 +196,7 @@ function explain(question, context = {}) {
   let lines = [];
 
   if (topic === 'unknown') lines = unknownTopic(project, plan);
-  else if (project) lines = fromProject(project, topic, context.log, context.verify);
+  else if (project) lines = fromProject(project, topic, context.log, context.verify, context.guide);
   else if (plan) lines = fromPlan(plan, topic);
   else lines = ['- Nothing is selected yet. Analyze a repository or open one of your projects first.'];
 
@@ -199,7 +208,7 @@ function explain(question, context = {}) {
     title: listTitle(topic),
     scope,
     lines,
-    provider: { configured: false, model: '', note: 'No AI provider is configured. These lines are read from the plan, the project record and the logs on this machine.' },
+    provider: { configured: false, model: '', note: 'This answer uses local project evidence. Enable the AI checkbox to send this question and its selected context to your configured provider.' },
   };
 }
 

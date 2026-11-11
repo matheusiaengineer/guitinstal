@@ -449,7 +449,7 @@
       `<button class="button button-ghost" data-action="terminal" data-id="${esc(project.id)}"><svg aria-hidden="true"><use href="#i-terminal"/></svg> Terminal</button>`,
       `<button class="button button-ghost" data-action="update" data-id="${esc(project.id)}"><svg aria-hidden="true"><use href="#i-refresh"/></svg> Update</button>`,
       `<button class="button button-ghost" data-action="log" data-id="${esc(project.id)}"><svg aria-hidden="true"><use href="#i-terminal"/></svg> Log</button>`,
-      `<button class="button button-ghost" data-action="ask" data-id="${esc(project.id)}"><svg aria-hidden="true"><use href="#i-search"/></svg> Ask</button>`,
+      `<button class="button button-ghost" data-action="guide" data-id="${esc(project.id)}"><svg aria-hidden="true"><use href="#i-robot"/></svg> Guide</button>`,
       `<button class="button button-ghost" data-action="open" data-id="${esc(project.id)}"><svg aria-hidden="true"><use href="#i-folder"/></svg> Folder</button>`,
       `<button class="button button-danger" data-action="remove" data-id="${esc(project.id)}" aria-label="Remove ${esc(
         project.name
@@ -1723,12 +1723,14 @@
         await loadState();
       } else if (action === 'log') {
         await openLog(project);
-      } else if (action === 'ask') {
+      } else if (action === 'guide') {
         window.location.hash = 'home';
         showView('home');
         setAskContext({ projectId: project.id }, project.fullName);
+        $('#askInput').value = 'How do I open and run this project?';
+        $('#askSendContext').checked = false;
         $('#askBlock').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        $('#askInput').focus();
+        await askQuestion();
       } else if (action === 'open') {
         const result = await api(`/api/projects/${encodeURIComponent(id)}/open`, { method: 'POST' });
         if (result.ok) toast('Folder opened', 'The project folder is open in your file manager.', 'success');

@@ -31,6 +31,7 @@ const {
   saveAiProvider,
 } = require('../core/ai-providers');
 const { applyProjectFile, readProjectFile } = require('../core/file-repair');
+const { projectGuide } = require('../core/project-guide');
 const {
   browseRepos,
   fetchCommits,
@@ -1002,6 +1003,7 @@ const routes = [
           project,
           log: projectLog(project),
           verify: project.verify || (await verifyInstall(project.dir)),
+          guide: projectGuide(project.dir),
         };
       } else if (body.planId) {
         const plan = analyzedPlans.get(String(body.planId));

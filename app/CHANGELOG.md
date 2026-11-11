@@ -15,6 +15,10 @@ capability, `PATCH` fixes behaviour without changing the interface.
   app, save keys in the operating-system secure store when available, and set a
   fallback order. Only providers the user enables and marks no-cost are tried;
   questions and recent project evidence are sent only after per-request consent.
+- **One-click project guide.** Each library card has a Guide action that reads
+  the local project manifests, launch scripts, README run instructions, and
+  recent logs, then explains the detected start command. This stays local unless
+  the user explicitly opts in to an external provider.
 - **Reviewed file-repair proposals.** The user can select one safe project text
   file and receive a complete before/after proposal. Applying it requires
   explicit confirmation, verifies the file has not changed, and keeps a backup.

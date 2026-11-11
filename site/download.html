@@ -61,7 +61,7 @@
           <li class="tl-step"><span class="tl-num">5</span><div><h3>You paste a GitHub URL</h3><p><code>github.com/owner/repo</code>, <code>owner/repo</code> or <code>git@github.com:owner/repo.git</code>. Only github.com is accepted.</p></div><time>5 seconds</time></li>
           <li class="tl-step"><span class="tl-num">6</span><div><h3>It reads the repo and writes a plan</h3><p>Manifests such as <code>package.json</code>, <code>requirements.txt</code>, <code>go.mod</code>, <code>Dockerfile</code>, <code>compose.yaml</code>, <code>pom.xml</code> decide the steps: clone, virtualenv, dependencies, build, start. Each step shows the exact command and a risk label.</p></div><time>3–15 seconds</time></li>
           <li class="tl-step"><span class="tl-num">7</span><div><h3>You approve, one step at a time</h3><p>Nothing runs until you click <em>Approve and run</em> — or approve the whole plan at once. You can skip optional steps and cancel mid-way. Output streams live into the console.</p></div><time>as long as you want</time></li>
-          <li class="tl-step"><span class="tl-num">8</span><div><h3>The project joins "My projects"</h3><p>Start it again later, <code>git pull --ff-only</code> to update, open the folder, or remove it from the registry. Your approvals are remembered per project.</p></div><time>forever, offline</time></li>
+          <li class="tl-step"><span class="tl-num">8</span><div><h3>The project joins "My projects"</h3><p>Use <b>Guide</b> for a local explanation based on its manifests, start scripts, README instructions, and logs. Then press <b>Run</b> to launch the detected command. You can also update, open the folder, or inspect logs; approvals are still required for setup commands.</p></div><time>whenever you need it</time></li>
         </ol>
       </section>
 
@@ -159,7 +159,7 @@
           <div class="split-col">
             <h3><svg><use href="#i-circle-help"/></svg> What it does not</h3>
             <ul class="cross-list">
-              <li>It has no telemetry or GUITinstal cloud account. By default, assistant questions use local evidence. If you opt in, the question and recent project logs/metadata are sent to enabled AI providers you marked no-cost; a repair request also sends the selected file. The app cannot verify provider pricing or quotas. If you connect GitHub, the token is sent directly to GitHub over HTTPS for public API requests.</li>
+              <li>It has no telemetry or GUITinstal cloud account. Project guidance is local by default. If you opt in to external AI, your question, detected project details, relevant README instructions, and recent logs are sent to enabled providers you marked no-cost; a repair request also sends the selected file. The app cannot verify provider pricing or quotas. If you connect GitHub, the token is sent directly to GitHub over HTTPS for public API requests.</li>
               <li>It does not listen on your LAN or the internet, so other devices on your network cannot reach it.</li>
               <li>It does not install anything before you approve. There is no background updater and no scheduled job.</li>
               <li>It does not request or access private GitHub repositories, and does not accept repository URLs from other git hosts.</li>
