@@ -125,6 +125,74 @@
   });
 
   on('toastClose')?.addEventListener('click', () => toast.classList.remove('visible'));
+
+  const guidePanel = on('guidePanel');
+  const guideToggle = on('guideToggle');
+  const guideInput = on('guideInput');
+  const guideMessages = on('guideMessages');
+
+  function addGuideMessage(text, speaker) {
+    const message = document.createElement('p');
+    message.className = `guide-message guide-message-${speaker}`;
+    message.textContent = text;
+    guideMessages.append(message);
+    guideMessages.scrollTop = guideMessages.scrollHeight;
+  }
+
+  function guideAnswer(question) {
+    const text = question.toLowerCase();
+    if (/terminal|shell|command/.test(text)) {
+      return 'A terminal is a text window for running a project’s setup or start command from its folder. In the desktop app, Guide can point out commands found in the project files. Review each command before running it; never paste a command you do not trust.';
+    }
+    if (/privacy|private|code|data|send|ai|artificial intelligence/.test(text)) {
+      return 'This website helper uses curated answers: it does not read your files, call an AI model, or send or store your chat. In the desktop app, project Guide works from local project files; external AI is optional and requires your consent before selected context is sent.';
+    }
+    if (/linux|mac|windows|download|install/.test(text)) {
+      return 'Choose your operating system in Downloads. A direct installer is offered only when it exists in the official release. Linux source-based setup instructions are available when an AppImage is not published. Read the install guide and keep your OS security protections enabled.';
+    }
+    if (/api|freeapi|model/.test(text)) {
+      return 'An API catalog such as FreeAPI lists services other apps can connect to; it is not itself an AI model. GUITinstal does not bundle thousands of APIs or promise they are free. Any external AI provider must be configured by you, and its pricing should be checked with that provider.';
+    }
+    if (/update|news|release|follow|favorite/.test(text)) {
+      return 'The site checks the project’s official GitHub release for the latest published version and notes. The desktop app does not silently rewrite or self-evolve; use official releases and review updates before installing. Automatic app updates are not currently available.';
+    }
+    if (/open|run|start|launch|project|repository|repo/.test(text)) {
+      return 'In the desktop app, add a repository to your library, review its setup steps, and approve what you want to run. Once it is saved, select Guide on the project to see its detected stack, start scripts, and useful README instructions. Guide explains the steps; it does not run README commands automatically.';
+    }
+    if (/what is|what does|about|guitinstal/.test(text)) {
+      return 'GUITinstal is a desktop workspace for organizing open-source projects, understanding their setup, and launching them with reviewed steps. Its project Guide can use local project files to explain how to get started.';
+    }
+    return 'I can help with downloads, project setup, the terminal, privacy, APIs, and updates. Try one of the suggested questions. For guidance about a specific folder, open that project in the desktop app and choose Guide.';
+  }
+
+  function askGuide(question) {
+    const value = question.trim();
+    if (!value || !guideMessages) return;
+    addGuideMessage(value, 'user');
+    addGuideMessage(guideAnswer(value), 'bot');
+  }
+
+  guideToggle?.addEventListener('click', () => {
+    const isOpen = guidePanel.hidden;
+    guidePanel.hidden = !isOpen;
+    guideToggle.setAttribute('aria-expanded', String(isOpen));
+    if (isOpen) guideInput?.focus();
+  });
+  on('guideClose')?.addEventListener('click', () => {
+    guidePanel.hidden = true;
+    guideToggle?.setAttribute('aria-expanded', 'false');
+    guideToggle?.focus();
+  });
+  on('guideForm')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    askGuide(guideInput.value);
+    guideInput.value = '';
+  });
+  on('guidePanel')?.addEventListener('click', (event) => {
+    const prompt = event.target.closest('[data-guide-question]');
+    if (prompt) askGuide(prompt.dataset.guideQuestion);
+  });
+
   const year = on('year');
   if (year) year.textContent = new Date().getFullYear();
 
@@ -204,6 +272,11 @@
       search?.focus();
     }
     if (event.key === 'Escape') {
+      if (guidePanel && !guidePanel.hidden) {
+        guidePanel.hidden = true;
+        guideToggle?.setAttribute('aria-expanded', 'false');
+        guideToggle?.focus();
+      }
       if (search) {
         search.value = '';
         search.dispatchEvent(new Event('input'));

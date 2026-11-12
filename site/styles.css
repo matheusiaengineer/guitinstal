@@ -219,3 +219,50 @@ img.brand-mark,img.mini-mark,img.cta-symbol{border:0;border-radius:22%;object-fi
 .whats-new-version{font-size:12px;font-weight:600;color:var(--text)}
 .whats-new p{margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.6}
 .whats-new small{display:block;margin-top:10px;color:var(--muted-2);font-size:11px}
+
+.guide-widget{position:fixed;z-index:40;right:16px;bottom:16px;display:grid;justify-items:end;gap:7px}
+.guide-toggle{position:relative;min-height:50px;padding:6px 12px 6px 7px;display:flex;align-items:center;gap:8px;border:1px solid #35435e;border-radius:16px;background:#111722;color:#f5f7fb;text-align:left;box-shadow:0 7px 24px #0009;transition:transform .2s,border-color .2s;animation:guide-welcome 4s ease-in-out 2}
+.guide-toggle:hover{transform:translateY(-2px);border-color:#638bd2}
+.guide-toggle>img{width:36px;height:36px;object-fit:contain;border-radius:10px}
+.guide-welcome-copy{display:grid;gap:1px}
+.guide-welcome-copy b{font-size:10px}
+.guide-welcome-copy small{display:flex;align-items:center;gap:3px;color:#b8d0ff;font-size:9px}
+.guide-welcome-copy svg{width:11px;height:11px}
+.guide-status-dot{position:absolute;left:34px;top:3px;width:8px;height:8px;border:2px solid #111722;border-radius:50%;background:#59d891;animation:guide-pulse 1.8s ease-in-out infinite}
+.guide-avatar{display:grid;place-items:center;flex:none;width:36px;height:36px;border:1px solid #35435e;border-radius:11px;background:#151b27}
+.guide-avatar img{width:30px;height:30px;object-fit:contain;border-radius:8px}
+.guide-panel{position:absolute;right:0;bottom:59px;width:min(290px,calc(100vw - 20px));max-height:min(390px,calc(100dvh - 82px));padding:10px;display:flex;flex-direction:column;gap:7px;border:1px solid #333d50;border-radius:15px;background:#10131a;box-shadow:0 16px 48px #000b}
+.guide-panel[hidden]{display:none}
+.guide-header{display:flex;align-items:center;gap:9px;padding-bottom:8px;border-bottom:1px solid #272d38}
+.guide-header h2{margin:0;color:#f5f7fb;font-size:12px}
+.guide-header p{margin:2px 0 0;color:#9da7b7;font-size:9px}
+.guide-close{margin-left:auto;width:28px;height:28px;border:0;border-radius:50%;background:#202630;color:#cbd2de;font-size:19px;line-height:1}
+.guide-close:hover{background:#303846;color:white}
+.guide-messages{min-height:48px;max-height:100px;overflow:auto;display:flex;flex-direction:column;gap:6px;padding:2px 1px}
+.guide-message{max-width:95%;margin:0;padding:8px 10px;border:1px solid #29303c;border-radius:11px;color:#dbe1eb;font-size:10px;line-height:1.45;overflow-wrap:anywhere}
+.guide-message-bot{align-self:flex-start;background:#191e28}
+.guide-message-user{align-self:flex-end;background:#17346a;border-color:#2957a0;color:#f3f7ff}
+.guide-prompts{display:flex;gap:5px;flex-wrap:wrap}
+.guide-prompts button{padding:5px 7px;border:1px solid #303948;border-radius:99px;background:#171c25;color:#c4cbd7;font-size:8px}
+.guide-prompts button:hover{border-color:#5a82c7;color:#fff}
+.guide-form{display:flex;gap:7px}
+.guide-form input{min-width:0;flex:1;padding:0 10px;border:1px solid #333b49;border-radius:999px;outline:none;background:#0a0c11;color:#f5f7fb;font-size:10px}
+.guide-form input:focus{border-color:#5b8ee4;box-shadow:0 0 0 3px #3679eb24}
+.guide-form .button{min-height:34px;padding:0 12px;font-size:10px}
+.guide-disclosure{margin:0;color:#8f98a7;font-size:7.5px;line-height:1.4}
+.guide-doc-link{display:flex;align-items:center;justify-content:center;gap:5px;padding-top:7px;border-top:1px solid #272d38;color:#b8d0ff;font-size:9px;font-weight:700}
+.guide-doc-link svg{width:14px;height:14px}
+.light-mode .guide-toggle,.light-mode .guide-panel{background:#fff;border-color:#d6dce7;color:#17191e}
+.light-mode .guide-status-dot{border-color:#fff}
+.light-mode .guide-header{border-color:#e4e7ed}
+.light-mode .guide-header h2{color:#17191e}
+.light-mode .guide-header p,.light-mode .guide-disclosure{color:#657080}
+.light-mode .guide-welcome-copy small{color:#2858a1}
+.light-mode .guide-close,.light-mode .guide-prompts button{background:#f1f3f7;color:#4d5663;border-color:#dce1e8}
+.light-mode .guide-message-bot{background:#f2f4f8;border-color:#e1e5eb;color:#313844}
+.light-mode .guide-form input{background:#f8f9fb;border-color:#d6dce5;color:#17191e}
+.light-mode .guide-doc-link{border-color:#e4e7ed}
+@keyframes guide-welcome{0%,100%{transform:translateY(0)}12%,24%{transform:translateY(-2px)}18%{transform:translateY(1px)}}
+@keyframes guide-pulse{0%,100%{box-shadow:0 0 0 0 #59d89166}50%{box-shadow:0 0 0 4px #59d89100}}
+@media(max-width:520px){.guide-widget{right:12px;bottom:12px}.guide-panel{bottom:59px;width:min(290px,calc(100vw - 20px));max-height:calc(100dvh - 82px)}}
+@media(prefers-reduced-motion:reduce){.guide-toggle{animation:none;transition:none}.guide-status-dot{animation:none}}
