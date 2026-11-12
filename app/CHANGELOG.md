@@ -7,6 +7,29 @@ Every release is a single entry here. The version in this file, the version in
 Semantic versioning: `MAJOR` breaks an existing workflow, `MINOR` adds a
 capability, `PATCH` fixes behaviour without changing the interface.
 
+## [0.9.0] - 2026-11-12
+
+### Added
+
+- **Linux setup guidance.** Missing common runtimes can show distribution-specific
+  terminal commands for Debian/Ubuntu, Fedora and Arch. GUITinstal never runs
+  those commands automatically.
+- **Xcode project support.** `.xcworkspace` and `.xcodeproj` repositories are
+  recognized and can be opened in Xcode on macOS. Builds and signing remain in
+  Xcode.
+- **Mobile site companion.** The site is installable as a PWA and can inspect
+  public GitHub repositories without claiming private access or unconfirmed
+  provider partnerships.
+- **More useful project guidance.** The project guide keeps conversation context
+  and explains setup steps while respecting local-first and explicit-consent
+  boundaries.
+
+### Notes
+
+- Windows installers are published for this release. Native macOS and Linux
+  packages will be added when their release builds complete; the site retains
+  the source-download instructions until then.
+
 ## [0.8.0] - 2026-11-11
 
 ### Added

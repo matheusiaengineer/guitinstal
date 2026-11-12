@@ -1,7 +1,7 @@
 {
-  "version": "0.8.0",
+  "version": "0.9.0",
   "releasedAt": "2026-11-12",
-  "releaseNotes": "Local-first AI troubleshooting, real install-error guidance and optional screen vision. Windows installers are available; macOS and Linux source ZIPs run with Node.js 24+.",
+  "releaseNotes": "Linux setup guidance, Xcode support, and installable PWA companion",
   "installGuide": "download.html",
   "links": {
     "github": "https://github.com/matheusiaengineer/guitinstal",
@@ -17,22 +17,22 @@
       "files": [
         {
           "kind": "setup",
-          "name": "GUITinstal-0.8.0-Setup-x64.exe",
-          "url": "https://github.com/matheusiaengineer/guitinstal/releases/download/v0.8.0/GUITinstal-0.8.0-Setup-x64.exe",
-          "size": 121875838,
+          "name": "GUITinstal-0.9.0-Setup-x64.exe",
+          "url": "https://github.com/matheusiaengineer/guitinstal/releases/download/v0.9.0/GUITinstal-0.9.0-Setup-x64.exe",
+          "size": 121880199,
           "sizeLabel": "116.2 MB",
-          "sha256": "1a6f82ded1c24a73a03a3803bd431346a606cfdd2efdd5fccc00dfc6ba96ccb6",
-          "builtAt": "2026-11-12T02:44:14.514Z",
+          "sha256": "2ef7cf1167c62160a06f92f5cef5f25f6aebce6abed64f46da8a28997783fe72",
+          "builtAt": "2026-11-12T22:27:11.057Z",
           "recommended": true
         },
         {
           "kind": "portable",
-          "name": "GUITinstal-0.8.0-Portable-x64.exe",
-          "url": "https://github.com/matheusiaengineer/guitinstal/releases/download/v0.8.0/GUITinstal-0.8.0-Portable-x64.exe",
-          "size": 110629716,
+          "name": "GUITinstal-0.9.0-Portable-x64.exe",
+          "url": "https://github.com/matheusiaengineer/guitinstal/releases/download/v0.9.0/GUITinstal-0.9.0-Portable-x64.exe",
+          "size": 110633905,
           "sizeLabel": "105.5 MB",
-          "sha256": "1fb1a9da93117424f1ec33c60a9a46ea0b054a27b5329c24f5c95e4e91a5c93b",
-          "builtAt": "2026-11-12T02:47:08.053Z",
+          "sha256": "44de93ff286a541dce87d3b57e7db846662173ef684c30a6e722e3bd269940b4",
+          "builtAt": "2026-11-12T22:29:34.602Z",
           "recommended": false
         }
       ]
@@ -40,7 +40,7 @@
     "macos": {
       "label": "macOS (Intel and Apple silicon)",
       "status": "pending",
-      "requirement": "Source ZIP requires Node.js 24 or newer and Git. Native DMG is published when available.",
+      "requirement": "Universal DMG. macOS may warn that the app is from an unidentified developer.",
       "files": [
         {
           "kind": "source",
@@ -54,7 +54,7 @@
     "linux": {
       "label": "Linux (x86_64)",
       "status": "pending",
-      "requirement": "Source ZIP requires Node.js 24 or newer and Git. AppImage is published when available.",
+      "requirement": "AppImage. FUSE 2 support may be required by your distribution.",
       "files": [
         {
           "kind": "source",

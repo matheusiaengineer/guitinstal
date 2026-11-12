@@ -1,7 +1,7 @@
 {
   "name": "guitinstal",
   "productName": "GUITinstal",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "description": "Discover, install and manage open-source GitHub projects through a simple, reviewable desktop flow.",
   "license": "MIT",

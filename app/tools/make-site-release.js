@@ -63,6 +63,12 @@ const portable = describe(`GUITinstal-${pkg.version}-Portable-x64.exe`, 'portabl
 const windows = [setup, portable].filter(Boolean);
 const macos = [describe(`GUITinstal-${pkg.version}-mac-universal.dmg`, 'universal')].filter(Boolean);
 const linux = [describe(`GUITinstal-${pkg.version}-linux-x64.AppImage`, 'appimage')].filter(Boolean);
+const sourceFiles = (platform) =>
+  (previous.platforms?.[platform]?.files || []).filter(
+    (file) => file.kind === 'source' && file.source === 'direct'
+  );
+const macosFiles = macos.length ? macos.map((file) => ({ ...file, recommended: true })) : sourceFiles('macos');
+const linuxFiles = linux.length ? linux.map((file) => ({ ...file, recommended: true })) : sourceFiles('linux');
 const builtFiles = [...windows, ...macos, ...linux];
 
 const manifest = {
@@ -89,13 +95,13 @@ const manifest = {
       label: 'macOS (Intel and Apple silicon)',
       status: macos.length ? 'available' : 'pending',
       requirement: 'Universal DMG. macOS may warn that the app is from an unidentified developer.',
-      files: macos.map((file) => ({ ...file, recommended: true })),
+      files: macosFiles,
     },
     linux: {
       label: 'Linux (x86_64)',
       status: linux.length ? 'available' : 'pending',
       requirement: 'AppImage. FUSE 2 support may be required by your distribution.',
-      files: linux.map((file) => ({ ...file, recommended: true })),
+      files: linuxFiles,
     },
   },
 };

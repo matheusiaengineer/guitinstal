@@ -140,6 +140,8 @@ URL is empty is removed from the page rather than rendered as a dead link.
 On the public site, the buttons read the latest public GitHub Release directly.
 Until a Linux AppImage is published, the Linux button opens the repository-based
 setup steps in `site/download.html`.
+When a release contains only Windows installers, the metadata generator keeps the
+existing macOS and Linux source-download entries instead of dropping those paths.
 
 The installers are **unsigned**: Windows SmartScreen and macOS Gatekeeper may warn
 before the first run. The site documents this instead of hiding it
