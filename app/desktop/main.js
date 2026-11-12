@@ -11,7 +11,7 @@
  * Requires roughly 250 MB of free disk for the Electron runtime.
  */
 
-const { app, BrowserWindow, Menu, shell, dialog } = require('electron');
+const { app, BrowserWindow, Menu, shell, dialog, desktopCapturer } = require('electron');
 const { spawn } = require('node:child_process');
 const net = require('node:net');
 const path = require('node:path');
@@ -115,6 +115,50 @@ async function createWindow() {
       nodeIntegration: false,
       sandbox: true,
     },
+  });
+
+  mainWindow.webContents.session.setDisplayMediaRequestHandler(async (request, callback) => {
+    let replied = false;
+    const deny = () => {
+      if (replied) return;
+      replied = true;
+      callback(null);
+    };
+    try {
+      if (!request.videoRequested || !request.userGesture || request.securityOrigin !== new URL(url).origin) {
+        deny();
+        return;
+      }
+
+      const sources = await desktopCapturer.getSources({
+        types: ['screen', 'window'],
+        thumbnailSize: { width: 160, height: 90 },
+        fetchWindowIcons: false,
+      });
+      const selectable = sources.slice(0, 10);
+      if (!selectable.length) {
+        deny();
+        return;
+      }
+
+      const { response } = await dialog.showMessageBox(mainWindow, {
+        type: 'question',
+        title: 'Share one screen with GUITinstal',
+        message: 'Choose the screen or window to analyze.',
+        detail: 'GUITinstal captures one frame and analyzes it locally. It does not record video or send the image to an external provider.',
+        buttons: [...selectable.map((source) => source.name), 'Cancel'],
+        cancelId: selectable.length,
+      });
+      if (response < 0 || response >= selectable.length) {
+        deny();
+        return;
+      }
+      replied = true;
+      callback({ video: selectable[response] });
+    } catch (error) {
+      console.error('[screen-capture] Could not open the native source picker:', error);
+      deny();
+    }
   });
 
   mainWindow.once('ready-to-show', () => mainWindow.show());

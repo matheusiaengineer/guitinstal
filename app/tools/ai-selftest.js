@@ -14,9 +14,14 @@ async function main() {
   try {
     const providers = require('../core/ai-providers');
     const { answerWithAI, suggestFileRepair } = require('../core/ai');
+    const localAi = require('../core/local-ai');
     const { applyProjectFile, readProjectFile } = require('../core/file-repair');
     const { projectGuide } = require('../core/project-guide');
     const secretStore = require('../core/secret-store');
+
+    assert.equal(localAi.getStatus().installed, false);
+    assert.equal(localAi.getStatus().modelSize, 1117320736);
+    console.log('ok   exposes the pinned local model as not installed before download');
 
     secretStore.save('github-selftest-token');
     assert.equal(secretStore.load().token, 'github-selftest-token');
@@ -77,12 +82,51 @@ async function main() {
     const localOnly = await answerWithAI('Why did it fail?', {}, false);
     assert.equal(attempts.length, 0);
     assert.equal(localOnly.provider.configured, false);
+    assert.match(localOnly.provider.note, /rule-based/);
     const aiAnswer = await answerWithAI('Why did it fail?', {}, true);
     assert.deepEqual(attempts.map((attempt) => attempt.model), ['free-one', 'free-two']);
     assert.equal(attempts.some((attempt) => attempt.model === 'paid-model'), false);
     assert.equal(aiAnswer.lines[0], 'The test error is explained.');
     assert.match(aiAnswer.provider.note, /Only providers marked no-cost were tried/);
     console.log('ok   uses explicit consent and falls back only to enabled no-cost providers');
+
+    const originalIsInstalled = localAi.isInstalled;
+    const originalComplete = localAi.complete;
+    localAi.isInstalled = () => true;
+    localAi.complete = async () => 'This answer came from the local model.';
+    const localModelAnswer = await answerWithAI('Explain this error', {}, false);
+    assert.equal(localModelAnswer.lines[0], 'This answer came from the local model.');
+    assert.match(localModelAnswer.provider.note, /No project data was sent/);
+    assert.equal(attempts.length, 2);
+    await assert.rejects(
+      suggestFileRepair({
+        question: 'Fix this',
+        context: {},
+        relativePath: 'src/app.js',
+        content: "console.log('old');\n",
+      }),
+      /No project file was sent to an external provider/
+    );
+    assert.equal(attempts.length, 2);
+
+    localAi.isInstalled = (kind) => kind === 'vision';
+    localAi.complete = async (_messages, _tokens, options) => {
+      assert.match(options.imageDataUrl, /^data:image\/jpeg;base64,/);
+      return 'The screenshot shows a missing runtime.';
+    };
+    const visionAnswer = await answerWithAI(
+      'What is happening on this screen?',
+      {},
+      true,
+      'data:image/jpeg;base64,dGVzdA=='
+    );
+    assert.equal(visionAnswer.lines[0], 'The screenshot shows a missing runtime.');
+    assert.match(visionAnswer.provider.note, /not sent to an external provider/);
+    assert.equal(attempts.length, 2);
+
+    localAi.isInstalled = originalIsInstalled;
+    localAi.complete = originalComplete;
+    console.log('ok   uses local text and vision models without sending project data or screenshots externally');
 
     const project = path.join(tempRoot, 'project');
     fs.mkdirSync(path.join(project, 'src'), { recursive: true });
@@ -166,7 +210,7 @@ async function main() {
     providers.removeAiProvider(paid.id);
     providers.removeAiProvider(first.id);
     providers.removeAiProvider(second.id);
-    console.log('\nAI assistant self-test: 7/7 checks passed');
+    console.log('\nAI assistant self-test: 9/9 checks passed');
   } finally {
     global.fetch = originalFetch;
     if (originalUserData === undefined) delete process.env.GUITINSTAL_USER_DATA;

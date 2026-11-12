@@ -282,6 +282,9 @@
       loadAiProviders().catch((error) => {
         $('#aiProviderStatus').textContent = error.message;
       });
+      loadLocalAi().catch((error) => {
+        $('#localAiStatus').textContent = error.message;
+      });
 
       const pill = $('#tokenPill');
       pill.textContent = data.settings.githubTokenSet ? 'GitHub: signed in' : 'GitHub: not signed in';
@@ -801,7 +804,7 @@
           ${step.notes ? `<p class="step-note"><svg aria-hidden="true"><use href="#i-alert"/></svg><span>${esc(step.notes)}</span></p>` : ''}
           ${step.error ? `<p class="step-note"><svg aria-hidden="true"><use href="#i-alert"/></svg><span>${linkify(step.error)}</span></p>` : ''}
           ${answerBox}
-          <div class="step-actions">${approveButton}${skipButton}</div>
+          <div class="step-actions">${approveButton}${step.status === 'failed' ? `<button class="button button-ghost" data-action="explain-run-error" data-step="${esc(step.id)}">Explain error with AI</button>` : ''}${skipButton}</div>
         </div>
       </article>`;
   }
@@ -949,6 +952,7 @@
   // which context the user is looking at: the plan just analyzed, or one project.
   const ask = { context: null };
   let aiProviders = [];
+  let localAiStatus = null;
   let repairProposal = null;
 
   function setAskContext(context, label) {
@@ -976,18 +980,7 @@
         method: 'POST',
         body: { question, ...(ask.context || {}), useAI: $('#askSendContext').checked },
       });
-      const answer = result.answer;
-      $('#askProviderNote').textContent = answer.provider.note;
-      if (answer.scope) $('#askScope').textContent = answer.scope;
-      list.innerHTML =
-        `<li class="ask-title">${esc(answer.title)}</li>` +
-        answer.lines
-          .map((line) => {
-            const isSub = /^\s{2,}/.test(line);
-            const text = line.replace(/^-\s+/, '').trim();
-            return `<li class="${isSub ? 'ask-sub' : 'ask-line'}">${esc(text)}</li>`;
-          })
-          .join('');
+      showAssistantAnswer(result.answer);
     } catch (error) {
       list.innerHTML = `<li class="ask-line">${esc(error.message)}</li>`;
     } finally {
@@ -995,9 +988,200 @@
     }
   }
 
+  function showAssistantAnswer(answer) {
+    $('#askProviderNote').textContent = answer.provider.note;
+    if (answer.scope) $('#askScope').textContent = answer.scope;
+    $('#askAnswer').innerHTML =
+      `<li class="ask-title">${esc(answer.title)}</li>` +
+      answer.lines
+        .map((line) => {
+          const isSub = /^\s{2,}/.test(line);
+          const text = line.replace(/^-\s+/, '').trim();
+          return `<li class="${isSub ? 'ask-sub' : 'ask-line'}">${esc(text)}</li>`;
+        })
+        .join('');
+  }
+
+  async function askAboutScreen() {
+    if (!localAiStatus?.visionInstalled) {
+      window.location.hash = 'settings';
+      showView('settings');
+      $('#localVisionStatus').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      $('#askAnswer').innerHTML = '<li class="ask-line">Screen capture is not available in this app window. Use the Project guide with terminal logs instead.</li>';
+      return;
+    }
+
+    const button = $('#askAboutScreen');
+    let stream = null;
+    button.disabled = true;
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      const video = document.createElement('video');
+      video.muted = true;
+      video.playsInline = true;
+      video.srcObject = stream;
+      await video.play();
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+      const scale = Math.min(1, 1280 / video.videoWidth);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+      canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+      const context = canvas.getContext('2d', { alpha: false });
+      if (!context) throw new Error('Could not prepare the screenshot for local analysis.');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      let imageDataUrl = canvas.toDataURL('image/jpeg', 0.62);
+      while (imageDataUrl.length > 1400000 && canvas.width > 640) {
+        canvas.width = Math.max(640, Math.round(canvas.width * 0.8));
+        canvas.height = Math.max(1, Math.round(video.videoHeight * (canvas.width / video.videoWidth)));
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        imageDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+      }
+      if (imageDataUrl.length > 1400000) throw new Error('This screen image is too large to analyze. Choose a smaller window.');
+      stream.getTracks().forEach((track) => track.stop());
+      stream = null;
+
+      const question =
+        $('#askInput').value.trim() ||
+        'Look at this screen. Explain any visible error and tell me the safest next step.';
+      $('#askAnswer').innerHTML = '<li class="ask-line">Analyzing one screenshot locally…</li>';
+      const result = await api('/api/assistant', {
+        method: 'POST',
+        body: { question, ...(ask.context || {}), imageDataUrl, useAI: false },
+      });
+      showAssistantAnswer(result.answer);
+    } catch (error) {
+      $('#askAnswer').innerHTML = `<li class="ask-line">${esc(error.message || 'Screen capture was cancelled.')}</li>`;
+    } finally {
+      stream?.getTracks().forEach((track) => track.stop());
+      button.disabled = false;
+    }
+  }
+
   function updateRepairButton() {
     const hasFreeProvider = aiProviders.some((provider) => provider.enabled && provider.noCost && provider.hasApiKey);
-    $('#repairButton').disabled = !hasFreeProvider || !ask.context?.projectId || !$('#repairConsent').checked;
+    $('#repairButton').disabled =
+      !(localAiStatus?.installed || hasFreeProvider) || !ask.context?.projectId || !$('#repairConsent').checked;
+  }
+
+  function renderLocalAi(status) {
+    localAiStatus = status;
+    $('#localAiSetupPrompt').hidden = !status.supported || status.installed;
+    $('#screenCaptureRow').hidden = !status.supported;
+    $('#askAboutScreen').textContent = status.visionInstalled
+      ? 'Ask about this screen'
+      : 'Set up screen vision (~520 MB)';
+    $('#screenCaptureNote').textContent = status.visionInstalled
+      ? 'You choose a window or screen; one image is processed locally and discarded.'
+      : 'Screen analysis requires the optional local vision model; screenshots are never sent to an external provider.';
+    const note = $('#localAiStatus');
+    const install = $('#localAiInstall');
+    const visionInstall = $('#localAiVisionInstall');
+    const cancel = $('#localAiCancel');
+    const remove = $('#localAiRemove');
+    if (!status.supported) {
+      note.textContent = status.unavailableReason;
+      install.hidden = true;
+      visionInstall.hidden = true;
+      cancel.hidden = true;
+      remove.hidden = true;
+    } else {
+      install.hidden = false;
+      const busy = status.status === 'downloading' || status.status === 'installing';
+      install.disabled = status.installed || busy;
+      visionInstall.hidden = false;
+      visionInstall.disabled = status.visionInstalled || busy;
+      visionInstall.textContent = status.visionInstalled
+        ? 'Screen vision is ready'
+        : 'Download screen-vision model (~520 MB)';
+      cancel.hidden = !busy;
+      install.textContent = status.installed ? 'Local AI is ready' : 'Download local AI (1.1 GB)';
+      remove.hidden = !status.installed || busy;
+      remove.disabled = busy;
+      if (status.installingKind === 'text') {
+        note.textContent = status.message;
+      } else if (status.installed) {
+        note.textContent = 'Local Qwen AI is installed. Questions and repair proposals are processed on this computer.';
+      } else if (status.error) {
+        note.textContent = `Download failed: ${status.error}`;
+      } else if (status.message) {
+        note.textContent = status.message;
+      } else {
+        note.textContent = 'Not installed. Internet is needed for the one-time download; inference runs offline afterward.';
+      }
+      $('#localVisionStatus').textContent = status.installingKind === 'vision'
+        ? status.message
+        : status.visionInstalled
+          ? 'Visual model installed. Screen captures are analyzed locally only.'
+          : status.error && status.status === 'error'
+            ? `Vision model not installed. ${status.error}`
+            : 'Optional SmolVLM visual model: about 520 MB, downloaded separately.';
+    }
+    updateRepairButton();
+  }
+
+  async function loadLocalAi() {
+    const result = await api('/api/ai/local');
+    renderLocalAi(result.localAI);
+  }
+
+  async function downloadAiModel(endpoint, selector, installedKey) {
+    const button = $(selector);
+    button.disabled = true;
+    $('#localAiStatus').textContent = 'Starting the verified download…';
+    let polling = true;
+    const pollStatus = async () => {
+      while (polling) {
+        try {
+          await loadLocalAi();
+        } catch (error) {
+          $('#localAiStatus').textContent = error.message;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+      }
+    };
+    const poller = pollStatus();
+    try {
+      await api(endpoint, { method: 'POST' });
+      await loadLocalAi();
+    } catch (error) {
+      $('#localAiStatus').textContent = error.message;
+    } finally {
+      polling = false;
+      await poller;
+      button.disabled = Boolean(
+        localAiStatus?.[installedKey] ||
+          localAiStatus?.status === 'downloading' ||
+          localAiStatus?.status === 'installing'
+      );
+      updateRepairButton();
+    }
+  }
+
+  function installLocalAi() {
+    return downloadAiModel('/api/ai/local/install', '#localAiInstall', 'installed');
+  }
+
+  function installLocalVision() {
+    return downloadAiModel('/api/ai/local/vision', '#localAiVisionInstall', 'visionInstalled');
+  }
+
+  async function explainRunError(stepId = '') {
+    const run = state.run;
+    const failedStep =
+      run?.steps.find((step) => step.id === stepId && step.status === 'failed') ||
+      run?.steps.find((step) => step.status === 'failed');
+    if (!run || !failedStep) return;
+    window.location.hash = 'home';
+    showView('home');
+    const name = state.analysis?.repo?.fullName || 'this installation';
+    setAskContext({ runId: run.id }, name);
+    $('#askInput').value = `Explain why "${failedStep.title}" failed and tell me the safest next step.`;
+    $('#askBlock').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    await askQuestion();
   }
 
   function renderAiProviders(providers) {
@@ -1060,7 +1244,9 @@
     if (!ask.context?.projectId || !$('#repairConsent').checked) return;
     const button = $('#repairButton');
     button.disabled = true;
-    $('#repairStatus').textContent = 'Reading the selected file and asking a configured no-cost provider…';
+    $('#repairStatus').textContent = localAiStatus?.installed
+      ? 'Reading the selected file with the local AI…'
+      : 'Reading the selected file and asking a configured no-cost provider…';
     $('#repairPreview').hidden = true;
     try {
       const question = $('#askInput').value.trim() || 'Explain the latest error and suggest a minimal repair.';
@@ -1074,7 +1260,7 @@
         },
       });
       showRepairProposal(result);
-      $('#repairStatus').textContent = 'Review the complete before/after contents. The app has not changed the file.';
+      $('#repairStatus').textContent = `Proposal from ${result.provider?.name || 'AI'}. Review the complete before/after contents; the app has not changed the file.`;
     } catch (error) {
       $('#repairStatus').textContent = error.message;
     } finally {
@@ -1189,7 +1375,10 @@
       title = 'Installation cancelled.';
       detail = 'No further steps will run. Your existing files were not deleted.';
     }
-    return `<div class="simple-console"><strong>${esc(title)}</strong><span>${linkify(detail)}</span></div>`;
+    const explain = snapshot.status === 'failed'
+      ? '<button class="button button-ghost" data-action="explain-run-error">Explain this error</button>'
+      : '';
+    return `<div class="simple-console"><strong>${esc(title)}</strong><span>${linkify(detail)}</span>${explain}</div>`;
   }
 
   // Told before the run, not after it failed: a missing tool is a download the
@@ -1852,6 +2041,10 @@
     }
 
     const action = event.target.closest('[data-action]');
+    if (action?.dataset.action === 'explain-run-error') {
+      await explainRunError(action.dataset.step);
+      return;
+    }
     if (action?.dataset.action === 'recheck-runtimes') {
       await recheckRuntimes(action);
       return;
@@ -1898,6 +2091,37 @@
 
   $('#repairConsent').addEventListener('change', updateRepairButton);
   $('#repairButton').addEventListener('click', proposeFileRepair);
+  $('#localAiInstall').addEventListener('click', installLocalAi);
+  $('#localAiVisionInstall').addEventListener('click', installLocalVision);
+  $('#askAboutScreen').addEventListener('click', askAboutScreen);
+  $('#localAiOpenSettings').addEventListener('click', () => {
+    window.location.hash = 'settings';
+    showView('settings');
+  });
+  $('#localAiCancel').addEventListener('click', async () => {
+    $('#localAiCancel').disabled = true;
+    try {
+      const result = await api('/api/ai/local/cancel', { method: 'POST' });
+      renderLocalAi(result.localAI);
+    } catch (error) {
+      $('#localAiStatus').textContent = error.message;
+    } finally {
+      $('#localAiCancel').disabled = false;
+    }
+  });
+  $('#localAiRemove').addEventListener('click', async () => {
+    if (!window.confirm('Remove the downloaded local AI model and runtime to free about 1.2 GB?')) return;
+    const button = $('#localAiRemove');
+    button.disabled = true;
+    try {
+      const result = await api('/api/ai/local', { method: 'DELETE' });
+      renderLocalAi(result.localAI);
+    } catch (error) {
+      $('#localAiStatus').textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
   $('#repairApply').addEventListener('click', applyFileRepair);
   $('#repairDiscard').addEventListener('click', () => {
     repairProposal = null;

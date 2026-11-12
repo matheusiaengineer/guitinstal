@@ -126,14 +126,14 @@ async function getJson(url) {
   }
 }
 
-function download(url, dest, hops = 0, onProgress) {
+function download(url, dest, hops = 0, onProgress, signal) {
   return new Promise((resolve, reject) => {
     https
-      .get(url, { headers: { 'user-agent': 'GUITinstal' }, timeout: 60000 }, (res) => {
+      .get(url, { headers: { 'user-agent': 'GUITinstal' }, timeout: 60000, signal }, (res) => {
         if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
           res.resume();
           if (hops >= 5) return reject(new Error(`too many redirects for ${url}`));
-          return resolve(download(new URL(res.headers.location, url).toString(), dest, hops + 1, onProgress));
+          return resolve(download(new URL(res.headers.location, url).toString(), dest, hops + 1, onProgress, signal));
         }
         if (res.statusCode !== 200) {
           res.resume();
@@ -233,9 +233,15 @@ function moveContents(from, to) {
  */
 function extractZip(zip, dest) {
   ensureDir(dest);
+  const quotePowerShell = (value) => String(value).replace(/'/g, "''");
   return run(
     'powershell.exe',
-    ['-NoProfile', '-NonInteractive', '-Command', `Expand-Archive -LiteralPath '${zip}' -DestinationPath '${dest}' -Force`],
+    [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      `Expand-Archive -LiteralPath '${quotePowerShell(zip)}' -DestinationPath '${quotePowerShell(dest)}' -Force`,
+    ],
     null
   );
 }
@@ -1280,7 +1286,10 @@ module.exports = {
   adapterIds,
   configurePhp,
   describe,
+  download,
+  extractArchive,
   existingTool,
+  sha256,
   managedToolDir,
   managedToolDirs,
   prepareTool,

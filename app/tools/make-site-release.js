@@ -35,7 +35,7 @@ try {
 const link = (name) => argFlag(name) || previous.links?.[name] || '';
 const base =
   argFlag('base').replace(/\/$/, '') ||
-  `https://github.com/matheus-uxdd33/guitinstal/releases/download/v${pkg.version}`;
+  `https://github.com/matheusiaengineer/guitinstal/releases/download/v${pkg.version}`;
 
 function sha256(file) {
   const hash = crypto.createHash('sha256');

@@ -139,7 +139,7 @@ if (failed.length) {
   fail(`${failed.map((item) => item.name).join(', ')} did not pass`)
 }
 
-const base = (flag('base') || `https://github.com/matheus-uxdd33/guitinstal/releases/download/v${version}`).replace(/\/$/, '')
+const base = (flag('base') || `https://github.com/matheusiaengineer/guitinstal/releases/download/v${version}`).replace(/\/$/, '')
 
 // **PORTABLE-ONLY MODE**: if --portable-only is set, only the portable installer is required.
 // Otherwise, both setup and portable installers are required (original behavior).

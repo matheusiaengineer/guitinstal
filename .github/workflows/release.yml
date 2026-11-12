@@ -56,6 +56,9 @@ jobs:
       - run: npm run check
         working-directory: app
 
+      - run: npm run check:ai
+        working-directory: app
+
       - run: npm run ${{ matrix.command }}
         working-directory: app
 
@@ -71,11 +74,26 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
       - uses: actions/download-artifact@v4
         with:
           pattern: release-*
           path: release-assets
           merge-multiple: true
+
+      - name: Extract release notes from the changelog
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v header="## [$version]" '
+            $0 == header { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' app/CHANGELOG.md > "$RUNNER_TEMP/release-notes.md"
+          test -s "$RUNNER_TEMP/release-notes.md"
 
       - env:
           GH_TOKEN: ${{ github.token }}
@@ -83,5 +101,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" release-assets/* \
             --repo "$GITHUB_REPOSITORY" \
             --title "GUITinstal $GITHUB_REF_NAME" \
-            --generate-notes \
+            --notes-file "$RUNNER_TEMP/release-notes.md" \
             --verify-tag

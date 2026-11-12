@@ -109,8 +109,11 @@
             <p class="section-note" id="askScope">Nothing selected yet</p>
           </div>
           <p class="panel-hint" id="askProviderNote">
-            The guide scans this project's manifests, launch settings, README instructions, and local logs. It stays on this computer unless you opt in to an external AI provider.
+            The guide scans this project's manifests, launch settings, README instructions, and local logs. When installed, the local AI answers on this computer. External providers are used only if you opt in.
           </p>
+          <div class="button-row" id="localAiSetupPrompt" hidden>
+            <button class="button button-ghost" type="button" id="localAiOpenSettings">Set up local AI in Settings</button>
+          </div>
           <form class="discover-form" id="askForm">
             <div class="input-row">
               <input id="askInput" class="text-input" type="text" autocomplete="off"
@@ -120,15 +123,19 @@
             <label class="switch-row">
               <input type="checkbox" id="askSendContext">
               <span>
-                <strong>Send this question and project context to my configured AI provider</strong>
+                <strong>Allow an external AI provider to receive this question and project context</strong>
                 <small>Sends your question and recent project logs/metadata to those providers. Never sends a request to a paid or unconfigured provider.</small>
               </span>
             </label>
           </form>
+          <div class="button-row" id="screenCaptureRow" hidden>
+            <button class="button button-ghost" type="button" id="askAboutScreen">Ask about this screen</button>
+            <span class="panel-hint" id="screenCaptureNote">You choose a window or screen; one image is processed locally and discarded.</span>
+          </div>
           <ul class="ask-answer" id="askAnswer" role="status" aria-live="polite"></ul>
           <section class="panel repair-panel" id="repairPanel" hidden aria-labelledby="repairTitle">
             <h3 id="repairTitle">Propose a file repair</h3>
-            <p class="panel-hint">Choose one project-relative text file. Its contents and recent project logs go only to providers you marked no-cost. Nothing changes until you review and approve the proposal.</p>
+            <p class="panel-hint">Choose one project-relative text file. The local model is preferred when installed; otherwise, the file can be sent only to a configured no-cost provider after you authorize it. Nothing changes until you review and approve the proposal.</p>
             <label class="field-label" for="repairPath">File path inside this project</label>
             <div class="input-row">
               <input id="repairPath" class="text-input" type="text" spellcheck="false" placeholder="src/app.js">
@@ -136,7 +143,7 @@
             </div>
             <label class="switch-row">
               <input type="checkbox" id="repairConsent">
-              <span><strong>Send this file to my configured no-cost providers</strong><small>Credentials and common secret files are blocked. Review the proposed change before applying it.</small></span>
+              <span><strong>Allow AI to read this file for a repair proposal</strong><small>It stays local when the model is installed; otherwise it is sent only to configured no-cost providers. Credentials and common secret files are blocked.</small></span>
             </label>
             <p class="panel-hint" id="repairStatus" role="status" aria-live="polite"></p>
             <div id="repairPreview" hidden>
@@ -321,6 +328,21 @@
               <button class="button button-ghost" id="clearToken">Remove</button>
             </div>
             <p class="panel-hint" id="tokenStorageNote">Saved tokens never go into config.json.</p>
+          </div>
+
+          <div class="panel">
+            <h3>Local AI</h3>
+            <p class="panel-hint">Download a 1.1 GB Qwen model and the llama.cpp CPU runtime once. After that, the Project guide and file-repair proposals can run on this computer without an API key or sending project files to an external AI service. CPU inference is slower; 8 GB of system memory is recommended. The model is licensed under Apache-2.0.</p>
+            <p class="panel-hint" id="localAiStatus" role="status" aria-live="polite">Checking local AI availability…</p>
+            <div class="button-row">
+              <button class="button button-primary" type="button" id="localAiInstall">Download local AI</button>
+              <button class="button button-ghost" type="button" id="localAiCancel" hidden>Cancel download</button>
+              <button class="button button-ghost" type="button" id="localAiRemove" hidden>Remove local AI files</button>
+            </div>
+            <p class="panel-hint" id="localVisionStatus" role="status" aria-live="polite">Optional visual model for analyzing a screen capture.</p>
+            <div class="button-row">
+              <button class="button button-ghost" type="button" id="localAiVisionInstall" hidden>Download screen-vision model (~520 MB)</button>
+            </div>
           </div>
 
           <div class="panel">

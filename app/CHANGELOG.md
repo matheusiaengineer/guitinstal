@@ -7,6 +7,31 @@ Every release is a single entry here. The version in this file, the version in
 Semantic versioning: `MAJOR` breaks an existing workflow, `MINOR` adds a
 capability, `PATCH` fixes behaviour without changing the interface.
 
+## [0.8.0] - 2026-11-11
+
+### Added
+
+- **A real local troubleshooting model.** Windows x64 users can download the
+  SHA-256-verified llama.cpp runtime and Qwen2.5 1.5B model from Settings. The
+  project guide and repair proposals can then use generative AI offline, without
+  an API key or sending project files to an external provider.
+- **Evidence-based install help.** Failed installation steps can send their
+  actual command output and run plan to the guide for explanation and a safe
+  next step. This applies to runs inside GUITinstal, not terminals opened by the
+  operating system.
+- **Optional local screen vision.** Users can separately download SmolVLM 500M
+  and ask about one screen image. Capture requires a user click and source
+  selection, is processed locally, and is never sent to an external provider.
+- **macOS and Linux downloads work now.** The site offers the public source ZIP
+  for both systems, with clear Node.js 24+ run instructions; native DMG and
+  AppImage links take precedence when those builds are published.
+
+### Fixed
+
+- **Local model requests now identify the selected model.** Text and vision
+  inference use their pinned model IDs, avoiding a failed request when the
+  local runtime starts.
+
 ## [0.7.14] - 2026-11-11
 
 ### Added

@@ -75,27 +75,27 @@
       </section>
 
       <section class="doc-section section-wrap" id="other-platforms">
-        <div class="download-heading"><span class="section-kicker">MACOS AND LINUX</span><h2>Choose your download.</h2><p>Native installers appear here when included in the latest release. Until then, use the public source instructions below.</p></div>
+        <div class="download-heading"><span class="section-kicker">MACOS AND LINUX</span><h2>Download the source ZIP.</h2><p>Run GUITinstal locally with Node.js 24 or newer. Native installers replace these links when they are published.</p></div>
         <div class="file-cards">
           <article class="file-card">
-            <header><span class="file-tag">Universal</span><h3>macOS DMG</h3></header>
-            <p>The universal disk image is linked here when available for Intel and Apple silicon Macs. Builds are unsigned, so macOS may warn that the developer is unidentified.</p>
+            <header><span class="file-tag">Source ZIP</span><h3>macOS</h3></header>
+            <p>Download and extract the source archive, then run GUITinstal in a local browser window. Requires Node.js 24 or newer and Git; no GitHub account is needed.</p>
             <dl class="spec">
-              <dt>File</dt><dd><code data-file-field="macos.universal.name">Not published yet</code></dd>
-              <dt>Size</dt><dd><span data-file-field="macos.universal.size">Not published yet</span></dd>
-              <dt>SHA-256</dt><dd class="sha"><code data-file-field="macos.universal.sha">—</code></dd>
+              <dt>File</dt><dd><code>guitinstal-main.zip</code></dd>
+              <dt>Requirements</dt><dd>Node.js 24+ and Git</dd>
+              <dt>Run mode</dt><dd>Local browser window</dd>
             </dl>
-            <a class="button button-light button-full" href="index.html#download" data-file="macos:universal"><svg><use href="#i-download"/></svg> Download for macOS</a>
+            <a class="button button-light button-full" href="https://github.com/matheusiaengineer/guitinstal/archive/refs/heads/main.zip" data-file="macos:source"><svg><use href="#i-download"/></svg> Download for macOS</a>
           </article>
           <article class="file-card">
-            <header><span class="file-tag">Available now</span><h3>Linux from repository</h3></header>
-            <p>An AppImage is linked here when available. The public source can also be run on 64-bit Linux with Node.js 24 or newer and Git. No GitHub account or payment is required.</p>
+            <header><span class="file-tag">Source ZIP</span><h3>Linux</h3></header>
+            <p>Download and extract the source archive, then run GUITinstal in a local browser window. Requires Node.js 24 or newer and Git; no GitHub account is needed.</p>
             <dl class="spec">
-              <dt>Source</dt><dd><code>matheusiaengineer/guitinstal</code></dd>
+              <dt>File</dt><dd><code>guitinstal-main.zip</code></dd>
               <dt>Run mode</dt><dd>Local browser window</dd>
               <dt>Requirements</dt><dd>Node.js 24+ and Git</dd>
             </dl>
-            <a class="button button-light button-full" href="#source"><svg><use href="#i-arrow-right"/></svg> See Linux setup steps</a>
+            <a class="button button-light button-full" href="https://github.com/matheusiaengineer/guitinstal/archive/refs/heads/main.zip" data-file="linux:source"><svg><use href="#i-download"/></svg> Download for Linux</a>
           </article>
         </div>
       </section>
@@ -209,12 +209,17 @@
       </section>
 
       <section class="doc-section section-wrap" id="source">
-        <div class="download-heading"><span class="section-kicker">LINUX AND MACOS · PUBLIC REPOSITORY</span><h2>Run GUITinstal from source.</h2><p>The repository is public, so you do not need a GitHub account. Install Git and Node.js 24 or newer first.</p></div>
+        <div class="download-heading"><span class="section-kicker">LINUX AND MACOS · SOURCE ZIP</span><h2>Run GUITinstal from the download.</h2><p>Extract the ZIP, then use Node.js 24 or newer. You can also clone the public repository with Git.</p></div>
         <div class="code-block" tabindex="0" role="region" aria-label="Commands to run GUITinstal from source">
-          <p>git clone https://github.com/matheusiaengineer/guitinstal.git
+          <p># After extracting the source ZIP:
+cd guitinstal-main/app
+node server/main.js --open
+
+# Or clone the public repository:
+git clone https://github.com/matheusiaengineer/guitinstal.git
 cd guitinstal/app
 node server/main.js --open</p>
-          <p class="code-caption">This runs GUITinstal locally and opens its interface in your browser. The app source and your projects stay on your computer. Use this method on Linux or macOS whenever a native installer is not listed above.</p>
+          <p class="code-caption">This runs GUITinstal locally and opens its interface in your browser. The app source and your projects stay on your computer. These source downloads work on Linux and macOS; they are not native installers.</p>
         </div>
         <p class="verify-note"><svg><use href="#i-info"/></svg><span>To install Node.js without guessing commands for your Linux distribution, use the official <a class="inline-link" href="https://nodejs.org/en/download" target="_blank" rel="noreferrer">Node.js download page</a>. Git is available from your distribution's software manager.</span></p>
       </section>

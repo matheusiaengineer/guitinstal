@@ -24,6 +24,7 @@ const {
 const { defaultWorkspace, userDataDir } = require('../core/paths');
 const changelog = require('../core/changelog');
 const { answerWithAI, suggestFileRepair } = require('../core/ai');
+const localAi = require('../core/local-ai');
 const {
   listAiProviders,
   removeAiProvider,
@@ -865,6 +866,31 @@ const routes = [
   },
   {
     method: 'GET',
+    path: /^\/api\/ai\/local$/,
+    handler: async () => ({ localAI: localAi.getStatus() }),
+  },
+  {
+    method: 'POST',
+    path: /^\/api\/ai\/local\/install$/,
+    handler: async () => ({ localAI: await localAi.install() }),
+  },
+  {
+    method: 'POST',
+    path: /^\/api\/ai\/local\/vision$/,
+    handler: async () => ({ localAI: await localAi.installVision() }),
+  },
+  {
+    method: 'POST',
+    path: /^\/api\/ai\/local\/cancel$/,
+    handler: async () => ({ localAI: localAi.cancelInstall() }),
+  },
+  {
+    method: 'DELETE',
+    path: /^\/api\/ai\/local$/,
+    handler: async () => ({ localAI: await localAi.remove() }),
+  },
+  {
+    method: 'GET',
     path: /^\/api\/ai\/providers$/,
     handler: async () => ({ providers: listAiProviders() }),
   },
@@ -1005,12 +1031,32 @@ const routes = [
           verify: project.verify || (await verifyInstall(project.dir)),
           guide: projectGuide(project.dir),
         };
+      } else if (body.runId) {
+        const run = runs.get(String(body.runId));
+        if (!run) throw new Error('That terminal run is no longer available. Start the project again and retry.');
+        context = {
+          plan: { ...run.plan, steps: run.steps },
+          log: {
+            lines: run.steps.flatMap((step) => (step.output || []).slice(-40).map((line) => line.text)),
+            source: 'install run',
+          },
+        };
       } else if (body.planId) {
         const plan = analyzedPlans.get(String(body.planId));
         if (!plan) throw new Error('That analysis is no longer in memory. Analyze the repository again.');
         context = { plan };
       }
-      return { answer: await answerWithAI(question, context, body.useAI === true), question };
+      const imageDataUrl = String(body.imageDataUrl || '');
+      if (imageDataUrl && !/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(imageDataUrl)) {
+        throw new Error('Only a JPEG screenshot captured inside GUITinstal can be analyzed.');
+      }
+      if (imageDataUrl && Buffer.from(imageDataUrl.slice(imageDataUrl.indexOf(',') + 1), 'base64').length > 1024 * 1024) {
+        throw new Error('The screenshot is too large. Capture a smaller image and try again.');
+      }
+      return {
+        answer: await answerWithAI(question, context, body.useAI === true, imageDataUrl),
+        question,
+      };
     },
   },
   {

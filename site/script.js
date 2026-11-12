@@ -88,8 +88,12 @@
     meta('winCardMeta', windowsFile?.url ? `Installer .exe · ${windowsFile.sizeLabel}` : 'Not hosted yet — see the guide');
     const macFile = pick('macos');
     const linuxFile = pick('linux');
-    meta('macCardMeta', macFile?.url ? `Universal DMG · ${macFile.sizeLabel}` : 'Not published yet — see the guide');
-    meta('linuxCardMeta', linuxFile?.url ? `AppImage · ${linuxFile.sizeLabel}` : 'Run from the public repository · Node.js 24+');
+    meta('macCardMeta', macFile?.url
+      ? macFile.kind === 'source' ? 'Source ZIP · Node.js 24+' : `Universal DMG · ${macFile.sizeLabel}`
+      : 'Not published yet — see the guide');
+    meta('linuxCardMeta', linuxFile?.url
+      ? linuxFile.kind === 'source' ? 'Source ZIP · Node.js 24+' : `AppImage · ${linuxFile.sizeLabel}`
+      : 'Run from the public repository · Node.js 24+');
 
     // What's new is written once, in releases.json, and read here — the app
     // shows the same notes from its own changelog entry for the same version.
@@ -218,7 +222,8 @@
         else if (/^GUITinstal-.*-mac-universal\.dmg$/i.test(asset.name)) [platform, kind] = ['macos', 'universal'];
         else if (/^GUITinstal-.*-linux-x64\.AppImage$/i.test(asset.name)) [platform, kind] = ['linux', 'appimage'];
         else continue;
-        if (platforms[platform].files.some((file) => file.source === 'direct')) continue;
+        if (platforms[platform].files.some((file) => file.source === 'direct' && file.kind !== 'source')) continue;
+        platforms[platform].files = platforms[platform].files.filter((file) => !(file.source === 'direct' && file.kind === 'source'));
         platforms[platform].files.push({
           kind,
           name: asset.name,

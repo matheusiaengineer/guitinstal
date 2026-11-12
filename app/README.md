@@ -27,7 +27,7 @@ O endereço aparece no terminal (ex.: `http://127.0.0.1:52310`) e é gravado em 
 3. **Monta o plano** — clone, ambiente virtual, instalação de dependências, build e inicialização. Cada passo mostra exatamente o comando que vai rodar, para que serve e qual o risco.
 4. **Você aprova** — nada executa sem confirmação. Dá para aprovar passo a passo ou o plano inteiro de uma vez, pular passos opcionais e cancelar a qualquer momento.
 5. **Executa de verdade** — `git clone`, `npm install`, `pip install`, `docker compose`, `cargo build`… rodam de fato, com a saída aparecendo ao vivo no console.
-6. **Organiza e executa** — o projeto entra em *Meus projetos*, com o comando de inicialização guardado. Clique em **Guide** para o assistente ler localmente o manifesto, os scripts e as instruções de execução do README; ele explica como abrir e qual comando GUITinstal usará. Clique em **Run** para iniciar; apps web abrem no navegador automaticamente. Também dá para parar, ver o log, atualizar (`git pull --ff-only`), abrir a pasta e remover do registro.
+6. **Organiza e executa** — o projeto entra em *Meus projetos*, com o comando de inicialização guardado. Clique em **Guide** para o assistente ler localmente o manifesto, os scripts e as instruções de execução do README; ele explica como abrir e qual comando GUITinstal usará. Se uma etapa de instalação falhar, **Explain error with AI** envia ao assistente a saída real daquela execução para explicar o problema. Isso vale para execuções dentro do GUITinstal; a saída de um terminal externo aberto pelo sistema operacional não pode ser lida automaticamente. Clique em **Run** para iniciar; apps web abrem no navegador automaticamente. Também dá para parar, ver o log, atualizar (`git pull --ff-only`), abrir a pasta e remover do registro.
 7. **Adota o que já está no disco** — a *Galeria de repositórios* varre a pasta de trabalho (e a antiga `.guitinstal-workspace`) e lista todo repositório Git baixado, inclusive os de instalações interrompidas. *Adicionar a Meus projetos* registra a pasta sem clonar de novo e detecta o comando de início a partir dos arquivos locais.
 
 ## Segurança
@@ -37,7 +37,8 @@ O endereço aparece no terminal (ex.: `http://127.0.0.1:52310`) e é gravado em 
 - **Sem shell.** Todos os comandos são executados com array de argumentos e `shell: false`. O conteúdo do repositório nunca é interpretado como sintaxe de shell. No Windows, o npm roda como `node npm-cli.js` justamente para não passar pelo `npm.cmd`.
 - **Só GitHub.** Só URLs do github.com são aceitas.
 - **Aprovação obrigatória.** O motor só executa um passo depois que ele foi aprovado explicitamente.
-- **IA opcional e consentida.** O guia de projeto lê localmente os manifestos, scripts, trechos de execução do README e logs. Se você habilitar o envio para um provedor configurado como sem custo, a pergunta e esse contexto selecionado serão enviados; o reparo também envia o arquivo que você escolher. O app não verifica preços ou cotas do provedor. A proposta precisa ser revisada e aprovada antes de alterar o arquivo.
+- **IA local e privada.** No Windows x64, Configurações permite baixar sob demanda o modelo Qwen2.5 1.5B (Q4_K_M) e o runtime de inferência; os downloads são verificados por SHA-256. Depois da instalação, o guia, a explicação de falhas de instalação e as propostas de reparo usam o modelo no próprio computador, sem chave de API e sem enviar arquivos para fora. O download de texto ocupa cerca de 1,2 GB; recomenda-se 8 GB de RAM. Uma visão de tela opcional usa o SmolVLM 500M (mais cerca de 520 MB). Ela só captura uma imagem quando você clica em **Ask about this screen** e escolhe uma janela ou tela; no Electron, um seletor nativo pede essa escolha. A imagem é analisada localmente, não é gravada nem enviada a provedores externos. Os modelos podem ser removidos para liberar espaço. macOS e Linux ainda não têm um runtime local testado pelo app.
+- **IA externa opcional e consentida.** Sem o modelo local, a orientação por regras continua disponível. Um provedor externo só recebe a pergunta e o contexto quando você marca a opção de envio; para reparos, o arquivo escolhido só pode ser enviado com autorização explícita e quando o modelo local não está instalado. O app não verifica preços ou cotas do provedor. Toda proposta precisa ser revisada e aprovada antes de alterar um arquivo.
 - **Verificação de disco.** Antes de instalar, o app confere o espaço livre na pasta de trabalho e avisa (ou bloqueia) se estiver crítico.
 - **Risco rotulado.** Todo passo exibe seu nível de risco: baixo, médio ou alto.
 
@@ -48,6 +49,7 @@ app/
 ├─ core/                 lógica pura, sem HTTP e sem DOM
 │  ├─ paths.js           caminhos de dados e app
 │  ├─ store.js           configurações e registro de projetos
+│  ├─ local-ai.js        downloads verificados e inferência local
 │  ├─ repo-url.js        parsing e validação de URL
 │  ├─ github.js          API do GitHub (repositório, árvore, busca, commits)
 │  ├─ detect.js          detecção de stack
@@ -70,7 +72,7 @@ O núcleo (`core/`) não sabe nada sobre HTTP nem sobre o navegador: é por isso
 
 ## Configurações
 
-Em *Configurações*: pasta de trabalho, conexão opcional com GitHub (aumenta o limite da API de 60 para 5000 requisições/hora), provedores opcionais de IA compatíveis com OpenAI, clone raso, aprovação automática de passos de baixo risco e tema. As chaves de IA ficam separadas da configuração e são guardadas no armazenamento seguro do sistema quando disponível; nunca são devolvidas à interface. Configure somente provedores que você verificou como sem custo e escolha sua ordem de fallback. O app não valida preços ou cotas. A conexão do GitHub usa o Device Flow oficial e não pede acesso a repositórios privados. Depois de conectar, a aba *My GitHub* em Discover mostra até 100 repositórios públicos da conta, ordenados por atualização.
+Em *Configurações*: pasta de trabalho, conexão opcional com GitHub (aumenta o limite da API de 60 para 5000 requisições/hora), download opcional dos modelos de IA local no Windows x64, provedores de IA compatíveis com OpenAI, clone raso, aprovação automática de passos de baixo risco e tema. Os modelos locais só são baixados após a ação do usuário e podem ser removidos dali para recuperar o espaço. As chaves de provedores ficam separadas da configuração e são guardadas no armazenamento seguro do sistema quando disponível; nunca são devolvidas à interface. Configure somente provedores que você verificou como sem custo e escolha sua ordem de fallback. O app não valida preços ou cotas. A conexão do GitHub usa o Device Flow oficial e não pede acesso a repositórios privados. Depois de conectar, a aba *My GitHub* em Discover mostra até 100 repositórios públicos da conta, ordenados por atualização.
 
 Em uma instalação nova, a pasta de trabalho padrão é `Desktop\Repositories` (ou `~/GUITinstal-workspace` quando não existe pasta Desktop). A galeria sempre varre a raiz configurada e, se existir, a pasta legada `.guitinstal-workspace` dentro dela: assim os clones feitos por versões antigas continuam visíveis mesmo depois de mudar a pasta de trabalho.
 

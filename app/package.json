@@ -1,13 +1,13 @@
 {
   "name": "guitinstal",
   "productName": "GUITinstal",
-  "version": "0.7.14",
+  "version": "0.8.0",
   "private": true,
   "description": "Discover, install and manage open-source GitHub projects through a simple, reviewable desktop flow.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/matheus-uxdd33/guitinstal.git"
+    "url": "https://github.com/matheusiaengineer/guitinstal.git"
   },
   "main": "desktop/main.js",
   "homepage": "https://guitinstal.vercel.app",
@@ -21,8 +21,8 @@
     "dist:mac": "electron-builder --mac --publish never",
     "dist:linux": "electron-builder --linux --publish never",
     "release": "node tools/release.js",
-    "check:ai": "node --check core/ai.js && node --check core/ai-providers.js && node --check core/project-guide.js && node --check core/file-repair.js && node --check tools/ai-selftest.js && node tools/ai-selftest.js",
-    "check": "node --check server/main.js && node --check server/api.js && node --check core/plan.js && node --check core/runner.js && node --check core/detect.js && node --check core/github.js && node --check core/tools.js && node --check core/git.js && node --check core/store.js && node --check core/paths.js && node --check core/workspace.js && node --check core/assistant.js && node --check core/secret-store.js && node --check core/github-auth.js && node --check core/prompts.js && node --check core/repo-url.js && node --check core/verify.js && node --check core/runtime-install.js && node --check core/changelog.js && node --check core/prepare-tool.js && node --check tools/release.js && node --check core/engine/index.js && node --check core/engine/catalog.js && node --check core/engine/requirements.js && node --check core/engine/project-type.js && node --check core/engine/compatibility.js && node --check core/engine/workflow.js && node --check core/engine/policy.js && node --check ui/app.js && node --check desktop/main.js && node --check desktop/preload.js && node --check tools/make-icon.js && node --check tools/gh-release.js && node --check tools/make-site-release.js && node --check tools/serve-site.js && node --check tools/probe-layout.js && node --check tools/check-first-run.js && node --check tools/install-matrix.js && node --check tools/engine-report.js && node --check tools/engine-selftest.js && node --check tools/plan-selftest.js && node --check tools/runtime-adapters-check.js && node --check tools/install-proof.js && node --check tools/github-repos-selftest.js && node --check tools/project-launch-selftest.js && node -e \"JSON.parse(require('fs').readFileSync('core/engine/catalog.json','utf8'))\" && node --check ../site/script.js && node --check ../site/sync-icons.js && node tools/github-repos-selftest.js && node tools/project-launch-selftest.js",
+    "check:ai": "node --check core/ai.js && node --check core/ai-providers.js && node --check core/local-ai.js && node --check core/project-guide.js && node --check core/file-repair.js && node --check tools/ai-selftest.js && node tools/ai-selftest.js",
+    "check": "node --check server/main.js && node --check server/api.js && node --check core/plan.js && node --check core/runner.js && node --check core/detect.js && node --check core/github.js && node --check core/tools.js && node --check core/git.js && node --check core/store.js && node --check core/paths.js && node --check core/workspace.js && node --check core/assistant.js && node --check core/secret-store.js && node --check core/github-auth.js && node --check core/prompts.js && node --check core/repo-url.js && node --check core/verify.js && node --check core/runtime-install.js && node --check core/local-ai.js && node --check core/changelog.js && node --check core/prepare-tool.js && node --check tools/release.js && node --check core/engine/index.js && node --check core/engine/catalog.js && node --check core/engine/requirements.js && node --check core/engine/project-type.js && node --check core/engine/compatibility.js && node --check core/engine/workflow.js && node --check core/engine/policy.js && node --check ui/app.js && node --check desktop/main.js && node --check desktop/preload.js && node --check tools/make-icon.js && node --check tools/gh-release.js && node --check tools/make-site-release.js && node --check tools/serve-site.js && node --check tools/probe-layout.js && node --check tools/check-first-run.js && node --check tools/install-matrix.js && node --check tools/engine-report.js && node --check tools/engine-selftest.js && node --check tools/plan-selftest.js && node --check tools/runtime-adapters-check.js && node --check tools/install-proof.js && node --check tools/github-repos-selftest.js && node --check tools/project-launch-selftest.js && node -e \"JSON.parse(require('fs').readFileSync('core/engine/catalog.json','utf8'))\" && node --check ../site/script.js && node --check ../site/sync-icons.js && node tools/github-repos-selftest.js && node tools/project-launch-selftest.js",
     "check:first-run": "node tools/check-first-run.js",
     "check:engine": "node tools/engine-selftest.js",
     "check:plans": "node tools/plan-selftest.js",

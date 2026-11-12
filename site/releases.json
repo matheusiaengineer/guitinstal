@@ -1,7 +1,7 @@
 {
-  "version": "0.7.14",
+  "version": "0.8.0",
   "releasedAt": "2026-11-11",
-  "releaseNotes": "Windows x64: setup and portable installers. Includes the local-first project Guide, optional consent-based AI troubleshooting, and reviewed file-repair proposals. macOS and Linux native installers are not included yet.",
+  "releaseNotes": "Local-first AI troubleshooting for install failures, a project Guide and reviewed file-repair proposals. Optional one-frame screen analysis uses a separate local vision model. macOS and Linux have working source ZIP downloads; local AI models are supported on Windows x64.",
   "installGuide": "download.html",
   "links": {
     "github": "https://github.com/matheusiaengineer/guitinstal",
@@ -12,42 +12,37 @@
   "platforms": {
     "windows": {
       "label": "Windows 10 / 11 (64-bit)",
-      "status": "available",
+      "status": "pending",
       "requirement": "450 MB free disk. Node.js, Git and Python are optional but unlock more stacks.",
-      "files": [
-        {
-          "kind": "setup",
-          "name": "GUITinstal-0.7.14-Setup-x64.exe",
-          "url": "https://github.com/matheusiaengineer/guitinstal/releases/download/v0.7.14/GUITinstal-0.7.14-Setup-x64.exe",
-          "size": 121866841,
-          "sizeLabel": "116.2 MB",
-          "sha256": "37e0502a691e0a3b4d74e8d9aa29b1db36efe7235fb42bc20b25dec8412d54bd",
-          "builtAt": "2026-11-11T20:59:02.803Z",
-          "recommended": true
-        },
-        {
-          "kind": "portable",
-          "name": "GUITinstal-0.7.14-Portable-x64.exe",
-          "url": "https://github.com/matheusiaengineer/guitinstal/releases/download/v0.7.14/GUITinstal-0.7.14-Portable-x64.exe",
-          "size": 110631346,
-          "sizeLabel": "105.5 MB",
-          "sha256": "330df24044b264c0d6cc2463d2adbc8b68599889ea66ed0c93690f7606ad09d7",
-          "builtAt": "2026-11-11T21:01:25.243Z",
-          "recommended": false
-        }
-      ]
+      "files": []
     },
     "macos": {
       "label": "macOS (Intel and Apple silicon)",
       "status": "pending",
-      "requirement": "Universal DMG. macOS may warn that the app is from an unidentified developer.",
-      "files": []
+      "requirement": "Source ZIP requires Node.js 24 or newer and Git. Native DMG is published when available.",
+      "files": [
+        {
+          "kind": "source",
+          "name": "guitinstal-main.zip",
+          "url": "https://github.com/matheusiaengineer/guitinstal/archive/refs/heads/main.zip",
+          "source": "direct",
+          "recommended": true
+        }
+      ]
     },
     "linux": {
       "label": "Linux (x86_64)",
       "status": "pending",
-      "requirement": "AppImage. FUSE 2 support may be required by your distribution.",
-      "files": []
+      "requirement": "Source ZIP requires Node.js 24 or newer and Git. AppImage is published when available.",
+      "files": [
+        {
+          "kind": "source",
+          "name": "guitinstal-main.zip",
+          "url": "https://github.com/matheusiaengineer/guitinstal/archive/refs/heads/main.zip",
+          "source": "direct",
+          "recommended": true
+        }
+      ]
     }
   }
 }
