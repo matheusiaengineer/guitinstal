@@ -1,7 +1,7 @@
 {
   "version": "0.8.0",
-  "releasedAt": "2026-11-11",
-  "releaseNotes": "Local-first AI troubleshooting for install failures, a project Guide and reviewed file-repair proposals. Optional one-frame screen analysis uses a separate local vision model. macOS and Linux have working source ZIP downloads; local AI models are supported on Windows x64.",
+  "releasedAt": "2026-11-12",
+  "releaseNotes": "Local-first AI troubleshooting, real install-error guidance and optional screen vision. Windows installers are available; macOS and Linux source ZIPs run with Node.js 24+.",
   "installGuide": "download.html",
   "links": {
     "github": "https://github.com/matheusiaengineer/guitinstal",
@@ -12,9 +12,30 @@
   "platforms": {
     "windows": {
       "label": "Windows 10 / 11 (64-bit)",
-      "status": "pending",
+      "status": "available",
       "requirement": "450 MB free disk. Node.js, Git and Python are optional but unlock more stacks.",
-      "files": []
+      "files": [
+        {
+          "kind": "setup",
+          "name": "GUITinstal-0.8.0-Setup-x64.exe",
+          "url": "https://github.com/matheusiaengineer/guitinstal/releases/download/v0.8.0/GUITinstal-0.8.0-Setup-x64.exe",
+          "size": 121875838,
+          "sizeLabel": "116.2 MB",
+          "sha256": "1a6f82ded1c24a73a03a3803bd431346a606cfdd2efdd5fccc00dfc6ba96ccb6",
+          "builtAt": "2026-11-12T02:44:14.514Z",
+          "recommended": true
+        },
+        {
+          "kind": "portable",
+          "name": "GUITinstal-0.8.0-Portable-x64.exe",
+          "url": "https://github.com/matheusiaengineer/guitinstal/releases/download/v0.8.0/GUITinstal-0.8.0-Portable-x64.exe",
+          "size": 110629716,
+          "sizeLabel": "105.5 MB",
+          "sha256": "1fb1a9da93117424f1ec33c60a9a46ea0b054a27b5329c24f5c95e4e91a5c93b",
+          "builtAt": "2026-11-12T02:47:08.053Z",
+          "recommended": false
+        }
+      ]
     },
     "macos": {
       "label": "macOS (Intel and Apple silicon)",
