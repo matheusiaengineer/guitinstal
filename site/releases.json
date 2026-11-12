@@ -1,10 +1,10 @@
 {
   "version": "0.7.14",
   "releasedAt": "2026-11-11",
-  "releaseNotes": "AI project guide and reviewed file-repair proposals",
+  "releaseNotes": "Windows x64: setup and portable installers. Includes the local-first project Guide, optional consent-based AI troubleshooting, and reviewed file-repair proposals. macOS and Linux native installers are not included yet.",
   "installGuide": "download.html",
   "links": {
-    "github": "https://github.com/matheus-uxdd33/guitinstal",
+    "github": "https://github.com/matheusiaengineer/guitinstal",
     "discord": "",
     "x": "",
     "youtube": ""
@@ -18,7 +18,7 @@
         {
           "kind": "setup",
           "name": "GUITinstal-0.7.14-Setup-x64.exe",
-          "url": "https://github.com/matheus-uxdd33/guitinstal/releases/download/v0.7.14/GUITinstal-0.7.14-Setup-x64.exe",
+          "url": "https://github.com/matheusiaengineer/guitinstal/releases/download/v0.7.14/GUITinstal-0.7.14-Setup-x64.exe",
           "size": 121866841,
           "sizeLabel": "116.2 MB",
           "sha256": "37e0502a691e0a3b4d74e8d9aa29b1db36efe7235fb42bc20b25dec8412d54bd",
@@ -28,7 +28,7 @@
         {
           "kind": "portable",
           "name": "GUITinstal-0.7.14-Portable-x64.exe",
-          "url": "https://github.com/matheus-uxdd33/guitinstal/releases/download/v0.7.14/GUITinstal-0.7.14-Portable-x64.exe",
+          "url": "https://github.com/matheusiaengineer/guitinstal/releases/download/v0.7.14/GUITinstal-0.7.14-Portable-x64.exe",
           "size": 110631346,
           "sizeLabel": "105.5 MB",
           "sha256": "330df24044b264c0d6cc2463d2adbc8b68599889ea66ed0c93690f7606ad09d7",
