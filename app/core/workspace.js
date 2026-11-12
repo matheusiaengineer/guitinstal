@@ -5,6 +5,7 @@ const path = require('node:path');
 
 const { detectStack, MANIFESTS } = require('./detect');
 const { parseRepoUrl } = require('./repo-url');
+const { findXcodeProject } = require('./xcode');
 
 /**
  * Local repository discovery.
@@ -113,6 +114,7 @@ function describeLocalRepo(dir) {
   const fallbackName = path.basename(dir);
   const detection = localDetection(dir);
   const primary = detection?.primary || null;
+  const xcodeProject = findXcodeProject(dir);
 
   return {
     dir,
@@ -127,6 +129,7 @@ function describeLocalRepo(dir) {
     stackLabel: primary?.label || 'Generic project',
     confidence: primary?.confidence || 'low',
     markers: primary?.markers || [],
+    xcodeProjectFile: xcodeProject?.relative || '',
     detection,
   };
 }

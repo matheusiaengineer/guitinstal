@@ -4,6 +4,14 @@
   const guide = 'download.html';
   let release = null;
 
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch((error) => {
+        console.warn('GUITinstal offline companion could not be installed:', error);
+      });
+    });
+  }
+
   function notice(title, message) {
     if (!toast) return;
     on('toastTitle').textContent = title;
@@ -141,15 +149,19 @@
     message.textContent = text;
     guideMessages.append(message);
     guideMessages.scrollTop = guideMessages.scrollHeight;
+    return message;
   }
 
   function guideAnswer(question) {
     const text = question.toLowerCase();
+    if (/analyze|analyse|inspect/.test(text) && /repo|repository|github/.test(text)) {
+      return 'Paste a public GitHub repository URL into this chat. I will fetch its public description, language, license, README and (when available) package scripts directly from GitHub, then explain the evidence. I do not download or run its code.';
+    }
     if (/terminal|shell|command/.test(text)) {
       return 'A terminal is a text window for running a project’s setup or start command from its folder. In the desktop app, Guide can point out commands found in the project files. Review each command before running it; never paste a command you do not trust.';
     }
     if (/privacy|private|code|data|send|ai|artificial intelligence/.test(text)) {
-      return 'This website helper uses curated answers: it does not read your files, call an AI model, or send or store your chat. In the desktop app, project Guide works from local project files; external AI is optional and requires your consent before selected context is sent.';
+      return 'The site helper answers common questions without an AI model or saved chat. If you paste a public GitHub URL, only that URL is sent to GitHub’s public API to read its metadata and README. The desktop Guide reads local project evidence; external AI is optional and requires your consent.';
     }
     if (/linux|mac|windows|download|install/.test(text)) {
       return 'Choose your operating system in Downloads. A direct installer is offered only when it exists in the official release. Linux source-based setup instructions are available when an AppImage is not published. Read the install guide and keep your OS security protections enabled.';
@@ -169,11 +181,103 @@
     return 'I can help with downloads, project setup, the terminal, privacy, APIs, and updates. Try one of the suggested questions. For guidance about a specific folder, open that project in the desktop app and choose Guide.';
   }
 
-  function askGuide(question) {
+  function githubRepoFromQuestion(question) {
+    const match = String(question || '').match(/(?:https?:\/\/)?(?:www\.)?github\.com\/([a-z0-9_.-]+)\/([a-z0-9_.-]+)(?:\.git)?(?:\/[^\s]*)?/i);
+    if (!match) return null;
+    const owner = match[1];
+    const repo = match[2].replace(/\.git$/i, '').replace(/[.,;:!?)]*$/, '');
+    if (!owner || !repo || owner === '.' || owner === '..' || repo === '.' || repo === '..') return null;
+    return { owner, repo };
+  }
+
+  async function githubJson(url) {
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!response.ok) {
+      if (response.status === 403 || response.status === 429) {
+        throw new Error('GitHub has temporarily limited anonymous API requests. Wait a little and try again.');
+      }
+      if (response.status === 404) throw new Error('That public repository or its README was not found. Check the owner/repository URL.');
+      throw new Error(`GitHub public API returned HTTP ${response.status}.`);
+    }
+    return response.json();
+  }
+
+  function decodeGitHubFile(file) {
+    if (!file?.content || file.encoding !== 'base64') return '';
+    const binary = atob(file.content.replace(/\s/g, ''));
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  }
+
+  function readmeExcerpt(readme) {
+    const text = decodeGitHubFile(readme);
+    if (!text) return '';
+    const lines = text.split(/\r?\n/);
+    const start = lines.findIndex((line) => /^#{1,4}\s*(quick start|get started|getting started|installation|install|usage|run|start)\b/i.test(line));
+    const excerpt = (start >= 0 ? lines.slice(start, start + 13) : lines.slice(0, 8))
+      .filter((line) => !/^\s*</.test(line))
+      .join('\n')
+      .replace(/[`*_>#]/g, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+    return excerpt.slice(0, 900);
+  }
+
+  async function analyzePublicRepo({ owner, repo }) {
+    const base = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+    const [details, readme, manifest] = await Promise.all([
+      githubJson(base),
+      githubJson(`${base}/readme`).catch((error) => ({ unavailable: error.message })),
+      githubJson(`${base}/contents/package.json`).catch(() => null),
+    ]);
+    const license = details.license?.spdx_id || 'not declared';
+    let scripts = {};
+    let manifestNote = '';
+    if (manifest) {
+      try {
+        const packageJson = JSON.parse(decodeGitHubFile(manifest));
+        if (packageJson.scripts && typeof packageJson.scripts === 'object') scripts = packageJson.scripts;
+      } catch {
+        manifestNote = 'The public root package.json could not be parsed.';
+      }
+    }
+    const launch = ['dev', 'start', 'serve', 'preview'].find((name) => typeof scripts[name] === 'string');
+    const excerpt = readmeExcerpt(readme);
+    const lines = [
+      `${details.full_name}: ${details.description || 'The repository has no public description.'}`,
+      `Primary language: ${details.language || 'not declared'} · License: ${license} · Default branch: ${details.default_branch || 'unknown'}.`,
+      launch ? `Found in package.json (not run): npm run ${launch} → ${scripts[launch]}.` : 'No familiar npm start script was found in the root package.json.',
+      manifestNote,
+      excerpt ? `README setup excerpt (untrusted project documentation, not executed): ${excerpt}` : readme.unavailable || 'No readable public README was found.',
+      'This is a quick check of public GitHub data, not a safety audit. The repository code was not downloaded, run, or sent to an AI provider.',
+    ];
+    return lines.filter(Boolean).join('\n\n');
+  }
+
+  async function askGuide(question) {
     const value = question.trim();
     if (!value || !guideMessages) return;
     addGuideMessage(value, 'user');
-    addGuideMessage(guideAnswer(value), 'bot');
+    const repository = githubRepoFromQuestion(value);
+    if (!repository) {
+      addGuideMessage(guideAnswer(value), 'bot');
+      return;
+    }
+    const reply = addGuideMessage('Reading public repository details from GitHub…', 'bot');
+    try {
+      reply.textContent = await analyzePublicRepo(repository);
+    } catch (error) {
+      reply.textContent = error.name === 'TimeoutError'
+        ? 'GitHub did not respond in time. Check your connection and try again.'
+        : error.message;
+    }
   }
 
   guideToggle?.addEventListener('click', () => {

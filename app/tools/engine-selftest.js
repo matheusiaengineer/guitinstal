@@ -45,6 +45,13 @@ const FIXTURES = [
     expect: { type: 'cli-tool', launch: 'run-command' },
   },
   {
+    name: 'an iOS project with an Xcode workspace',
+    files: ['ios/GUITinstal.xcworkspace/contents.xcworkspacedata', 'ios/GUITinstal.xcodeproj/project.pbxproj'],
+    manifests: {},
+    repo: { name: 'guitinstal-ios' },
+    expect: { type: 'apple-application', launch: 'open-in-xcode', stack: 'xcode' },
+  },
+  {
     name: 'a Django application',
     files: ['manage.py', 'requirements.txt', 'demo/settings.py'],
     manifests: { 'requirements.txt': 'Django==5.0.6\nrequests==2.32.0\n' },
@@ -126,6 +133,7 @@ function record(name, ok, detail) {
 
 console.log('Engine self-test');
 console.log('-----------------');
+require('./xcode-selftest');
 
 // 1. The catalog must be consistent with itself.
 const catalogResult = validate();
@@ -140,6 +148,13 @@ for (const fixture of FIXTURES) {
   const entries = fixture.files.map((path) => ({ path, size: 128 }));
   const detection = detectStack(entries, fixture.manifests);
   const result = classify({ entries, manifests: fixture.manifests, detection, repo: fixture.repo });
+  if (fixture.expect.stack) {
+    record(
+      `${fixture.name} is recognized as ${fixture.expect.stack}`,
+      detection.primary?.stack === fixture.expect.stack,
+      detection.primary?.stack === fixture.expect.stack ? '' : `got "${detection.primary?.stack || 'unknown'}"`
+    );
+  }
 
   const typeOk = result.type === fixture.expect.type;
   record(
@@ -177,6 +192,12 @@ record(
   blocked.requiresAdmin === true,
   `requiresAdmin ${blocked.requiresAdmin}`
 );
+const xcodeWin = runtimeVerdict('xcode', { platform: 'win32', arch: 'x64', adapters: [] });
+record('Xcode stays guided on Windows so projects can still be saved', xcodeWin.verdict === 'guided', xcodeWin.verdict);
+const xcodeMac = runtimeVerdict('xcode', { platform: 'darwin', arch: 'arm64', adapters: [] });
+record('Xcode is guided on macOS until Apple installs it', xcodeMac.verdict === 'guided', xcodeMac.verdict);
+const xcodeReady = forStack('xcode', { platform: 'darwin', arch: 'arm64', available: ['xcode'], adapters: [] });
+record('an installed Xcode is ready on Apple Silicon', xcodeReady.verdict === 'supported', xcodeReady.verdict);
 
 // 4. A managed runtime has to be installable and has to publish a digest.
 const php = runtimeVerdict('php', { platform: 'win32', arch: 'x64' });

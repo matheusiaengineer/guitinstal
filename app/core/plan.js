@@ -5,6 +5,7 @@ const path = require('node:path');
 
 const { resolveTool, installHint, venvPython, pythonExecutable } = require('./tools');
 const { adapterIds, adapterProvides, describe: describeTool, supportedIds } = require('./runtime-install');
+const { linuxInstallCommands } = require('./linux-install-guides');
 const { isSafeScriptName, safeDirName } = require('./repo-url');
 const { appRoot } = require('./paths');
 const { checkDiskSpace } = require('./disk');
@@ -885,6 +886,7 @@ function recheckCloneStep(step) {
  */
 function projectKind(primary) {
   if (!primary) return 'unsupported';
+  if (primary.stack === 'xcode') return 'ios-app';
   if (primary.stack === 'node') {
     if (primary.hasBin) return 'cli';
     if (primary.scripts?.dev || primary.scripts?.serve || primary.scripts?.preview) return 'web-service';
@@ -923,6 +925,9 @@ function buildPlan({ repo, detection, settings, runtimes = [] }) {
   const steps = [sourceStep({ repo, cloneUrl: repo.cloneUrl, dir, shallow: settings.shallowClone })];
 
   const primary = detection.primary;
+  const xcodeProjectFile =
+    detection.all?.find((item) => item.stack === 'xcode')?.projectFile ||
+    (primary?.stack === 'xcode' ? primary.projectFile : '');
   if (primary) {
     const builder = BUILDERS[primary.stack];
     if (builder) {
@@ -1070,7 +1075,7 @@ function buildPlan({ repo, detection, settings, runtimes = [] }) {
     warnings.push(
       `Not installed on this machine: ${cannotInstall.join(', ')}. The steps that need them stop until they are installed. ` +
         (pages.length ? `Install them from ${pages.join(' ')}. ` : '') +
-        'Then press "Re-check tools": GUITinstal reads the Windows PATH again and finds the tool without a restart.'
+        'Then press "Re-check tools": GUITinstal scans the current PATH again and finds the tool without a restart.'
     );
   }
   for (const reason of compatibility.reasons || []) {
@@ -1078,6 +1083,10 @@ function buildPlan({ repo, detection, settings, runtimes = [] }) {
   }
   if (primary) {
     for (const item of detection.secondary || []) {
+      if (item.stack === 'xcode') {
+        warnings.push('This repository also contains an Apple project. Open it in Xcode on a Mac; GUITinstal does not build or sign iOS apps automatically.');
+        continue;
+      }
       const needed = RUNTIME_FOR[item.stack] || [];
       const absent = needed.filter((id) => !hasRuntime(id));
       warnings.push(
@@ -1095,6 +1104,7 @@ function buildPlan({ repo, detection, settings, runtimes = [] }) {
       disk,
       missingRuntimes,
       installGuides,
+      linuxInstallCommands: process.platform === 'linux' ? linuxInstallCommands(cannotInstall) : [],
       warnings,
       compatibility: {
         verdict: compatibility.verdict,
@@ -1126,6 +1136,7 @@ function buildPlan({ repo, detection, settings, runtimes = [] }) {
     stack: primary
       ? { id: primary.stack, label: primary.label, confidence: primary.confidence, markers: primary.markers }
       : { id: 'unknown', label: 'Generic project', confidence: 'low', markers: [] },
+    xcodeProjectFile,
     directory: dir,
     kind: projectKind(primary),
     steps: steps.map((item, index) => ({

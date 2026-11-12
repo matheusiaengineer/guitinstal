@@ -64,6 +64,12 @@ const TYPES = {
     description: 'An application built around an AI model. It runs like the kind of application it really is.',
     actions: ['install', 'run', 'open-app', 'stop', 'logs', 'open-folder', 'update', 'uninstall'],
   },
+  'apple-application': {
+    label: 'Apple app',
+    launchModel: 'open-in-xcode',
+    description: 'An Apple-platform project. GUITinstal opens it in Xcode on macOS; building and signing stay in Xcode.',
+    actions: ['install', 'open-in-xcode', 'open-folder'],
+  },
   'ai-skill': {
     label: 'AI skill or plugin',
     launchModel: 'install-in-host',
@@ -359,6 +365,10 @@ function classify(input = {}) {
   // A skill or plugin is not run by GUITinstal, it is installed into a host.
   if (skill.length) {
     return base('ai-skill', skill, 'high', { inner: '' });
+  }
+
+  if (primary?.stack === 'xcode') {
+    return base('apple-application', ['Xcode project'], 'high');
   }
 
   // Several services that belong together are one installation.

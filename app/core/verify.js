@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { currentBranch, isGitRepo, localHead } = require('./git');
+const { findXcodeProject } = require('./xcode');
 
 /**
  * Proves an installation actually produced files.
@@ -159,7 +160,8 @@ async function verifyProject(directory, context = {}) {
 
   add('repository', base.exists && base.files > 0, base.exists ? `${base.files} project files` : 'the folder does not exist');
   add('git', base.isGit, base.isGit ? `commit ${base.commit}` : 'not a Git repository');
-  add('manifest', Boolean(base.manifest), base.manifest || 'no known manifest in the folder');
+  const xcodeProject = stack === 'xcode' ? findXcodeProject(directory) : null;
+  add('manifest', Boolean(base.manifest || xcodeProject), base.manifest || xcodeProject?.relative || 'no known manifest in the folder');
 
   const paths = DEPENDENCY_PATHS[stack];
   if (paths === undefined) {

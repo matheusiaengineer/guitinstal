@@ -4,9 +4,19 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build and publish (for example v0.8.0)
+        required: true
+        type: string
 
 permissions:
   contents: write
+
+concurrency:
+  group: desktop-release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -35,6 +45,8 @@ jobs:
             files: app/dist/GUITinstal-*-linux-x64.AppImage
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -43,7 +55,9 @@ jobs:
           cache-dependency-path: app/package-lock.json
 
       - name: Verify release tag matches app version
-        run: node -e "if ('v' + require('./app/package.json').version !== process.env.GITHUB_REF_NAME) process.exit(1)"
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: node -e "if ('v' + require('./app/package.json').version !== process.env.RELEASE_TAG) process.exit(1)"
 
       - if: matrix.os == 'ubuntu-24.04'
         run: |
@@ -76,7 +90,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ inputs.tag || github.ref_name }}
 
       - uses: actions/download-artifact@v4
         with:
@@ -86,8 +100,10 @@ jobs:
 
       - name: Extract release notes from the changelog
         shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          version="${RELEASE_TAG#v}"
           awk -v header="## [$version]" '
             $0 == header { found = 1; next }
             found && /^## \[/ { exit }
@@ -95,11 +111,25 @@ jobs:
           ' app/CHANGELOG.md > "$RUNNER_TEMP/release-notes.md"
           test -s "$RUNNER_TEMP/release-notes.md"
 
-      - env:
+      - name: Create or update release
+        shell: bash
+        env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          gh release create "$GITHUB_REF_NAME" release-assets/* \
+          if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --draft \
+              --title "GUITinstal $RELEASE_TAG" \
+              --notes-file "$RUNNER_TEMP/release-notes.md" \
+              --verify-tag
+          fi
+          gh release upload "$RELEASE_TAG" release-assets/* \
             --repo "$GITHUB_REPOSITORY" \
-            --title "GUITinstal $GITHUB_REF_NAME" \
-            --notes-file "$RUNNER_TEMP/release-notes.md" \
-            --verify-tag
+            --clobber
+          release_id="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" --jq .id)"
+          gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            --method PATCH \
+            --field draft=false \
+            --field prerelease=false >/dev/null

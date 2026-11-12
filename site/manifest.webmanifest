@@ -1,0 +1,25 @@
+{
+  "id": "./",
+  "name": "GUITinstal — Open Source, Made Simple",
+  "short_name": "GUITinstal",
+  "description": "A mobile companion for exploring public open-source repositories and GUITinstal setup guidance.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": [
+    {
+      "src": "assets/logo-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

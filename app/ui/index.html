@@ -124,10 +124,13 @@
               <input type="checkbox" id="askSendContext">
               <span>
                 <strong>Allow an external AI provider to receive this question and project context</strong>
-                <small>Sends your question and recent project logs/metadata to those providers. Never sends a request to a paid or unconfigured provider.</small>
+                <small>Sends your question, recent conversation turns and project logs/metadata to those providers. Never sends a request to a paid or unconfigured provider.</small>
               </span>
             </label>
           </form>
+          <div class="button-row">
+            <button class="button button-ghost" type="button" id="askClear">Clear conversation</button>
+          </div>
           <div class="button-row" id="screenCaptureRow" hidden>
             <button class="button button-ghost" type="button" id="askAboutScreen">Ask about this screen</button>
             <span class="panel-hint" id="screenCaptureNote">You choose a window or screen; one image is processed locally and discarded.</span>

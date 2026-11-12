@@ -117,8 +117,10 @@ npm run dist:linux          # -> AppImage x64
 
 Pushing a tag `v<version>` runs `.github/workflows/release.yml` on native Windows,
 macOS and Linux runners, then publishes the installers as a GitHub Release. The
-website reads the latest public release assets and selects a download for the
-visitor's operating system.
+workflow can also be started manually with an existing tag to rebuild and attach
+all platform installers. It verifies the tag matches `app/package.json` and only
+publishes after the platform builds finish. The website reads the latest public
+release assets and selects a download for the visitor's operating system.
 
 Social icons in the site header and footer come from the same file:
 
@@ -148,8 +150,9 @@ before the first run. The site documents this instead of hiding it
 The Vercel site serves the landing page and install guide, not the large installer
 files: the Windows installer is about 122 MB, above the 100 MB deploy upload cap.
 Windows currently downloads from GitHub Releases. Linux users can run the public
-source with Node.js 24+ and Git; a Linux AppImage can be added to a future GitHub
-Release and will be detected automatically by the site.
+source with Node.js 24+ and Git until the native AppImage is published. The site
+automatically switches to the AppImage and universal macOS DMG when those assets
+are attached to the latest GitHub Release.
 
 ## Publishing the website
 
@@ -162,11 +165,17 @@ vercel --prod
 ## Known state of things
 
 - Windows installers are published on GitHub Releases. Linux packaging targets
-  an x86_64 AppImage, but no Linux binary is currently published; the website
-  directs Linux users to run the public repository source with Node.js 24+.
-- Runtime adapters are
-  currently Windows-only, so macOS/Linux guide users to install missing runtimes
-  from their official sources.
+  an x86_64 AppImage and macOS a universal DMG; neither native asset is currently
+  published. The release workflow can be manually dispatched with the existing
+  tag to build and attach them.
+- Runtime adapters are currently Windows-only. On Linux, missing common runtimes
+  also have optional Debian/Ubuntu, Fedora and Arch terminal commands in the
+  desktop app's project preflight; GUITinstal never runs them, and re-checks PATH
+  after the user installs the packages. Other missing runtimes link to their
+  official sources.
+- The mobile site is a PWA companion. The desktop app recognizes Xcode projects
+  and can open them on macOS; building and signing iOS apps remain in Xcode and
+  are not automated by GUITinstal.
 - The app interface is in English, the same as the website.
 - Nine runtimes can be installed by the app itself on Windows, and each of the
   nine was proven by installing it and using it (a venv, a compiled Go binary, a

@@ -227,13 +227,14 @@ const RUNTIMES = [
   { id: 'go', label: 'Go', tool: 'go', args: ['version'], install: 'https://go.dev/dl/' },
   { id: 'cargo', label: 'Rust (Cargo)', tool: 'cargo', args: ['--version'], install: 'https://www.rust-lang.org/tools/install' },
   { id: 'dotnet', label: '.NET SDK', tool: 'dotnet', args: ['--version'], install: 'https://dotnet.microsoft.com/en-us/download' },
+  { id: 'xcode', label: 'Xcode', tool: 'xcodebuild', args: ['-version'], install: 'https://developer.apple.com/xcode/', note: 'Xcode runs only on macOS and is installed through Apple.' },
   { id: 'java', label: 'Java', tool: 'java', args: ['-version'], install: 'https://adoptium.net/temurin/releases/' },
-  { id: 'php', label: 'PHP', tool: 'php', args: ['--version'], install: 'https://windows.php.net/download/', note: 'PHP is the runtime Composer and the project need.' },
+  { id: 'php', label: 'PHP', tool: 'php', args: ['--version'], install: 'https://www.php.net/downloads.php', note: 'PHP is the runtime Composer and the project need.' },
   { id: 'composer', label: 'PHP (Composer)', tool: 'composer', args: ['--version'], install: 'https://getcomposer.org/download/', note: 'Composer also needs PHP on the machine.' },
   { id: 'uv', label: 'uv', tool: 'uv', args: ['--version'], install: 'https://docs.astral.sh/uv/getting-started/installation/', note: 'uv installs the exact versions in uv.lock.' },
   { id: 'bun', label: 'Bun', tool: 'bun', args: ['--version'], install: 'https://bun.sh/docs/installation', note: 'Bun replaces node and npm for projects that ship bun.lockb.' },
-  { id: 'bundle', label: 'Ruby (Bundler)', tool: 'bundle', args: ['--version'], install: 'https://rubyinstaller.org/downloads/', note: 'Ruby for Windows ships with Bundler.' },
-  { id: 'make', label: 'Make', tool: 'make', args: ['--version'], install: 'https://www.mingw-w64.org/' },
+  { id: 'bundle', label: 'Ruby (Bundler)', tool: 'bundle', args: ['--version'], install: 'https://www.ruby-lang.org/en/downloads/', note: 'Install Ruby and Bundler for your operating system.' },
+  { id: 'make', label: 'Make', tool: 'make', args: ['--version'], install: 'https://www.gnu.org/software/make/' },
 ];
 
 /** Where a runtime comes from, so a missing tool is an instruction and not a dead end. */

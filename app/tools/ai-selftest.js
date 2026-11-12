@@ -90,6 +90,24 @@ async function main() {
     assert.match(aiAnswer.provider.note, /Only providers marked no-cost were tried/);
     console.log('ok   uses explicit consent and falls back only to enabled no-cost providers');
 
+    attempts = [];
+    await answerWithAI(
+      'What should I try next?',
+      {},
+      true,
+      '',
+      [
+        { role: 'user', content: 'Why did it fail?' },
+        { role: 'assistant', content: 'The install step reported a missing package.' },
+      ]
+    );
+    const conversationMessages = JSON.parse(attempts[1].body).messages;
+    assert.deepEqual(conversationMessages.slice(1, 3).map((message) => message.role), ['user', 'assistant']);
+    assert.match(conversationMessages[1].content, /Why did it fail/);
+    assert.match(conversationMessages[2].content, /missing package/);
+    attempts = [];
+    console.log('ok   carries the current project conversation to opted-in AI follow-ups');
+
     const originalIsInstalled = localAi.isInstalled;
     const originalComplete = localAi.complete;
     localAi.isInstalled = () => true;
@@ -97,7 +115,7 @@ async function main() {
     const localModelAnswer = await answerWithAI('Explain this error', {}, false);
     assert.equal(localModelAnswer.lines[0], 'This answer came from the local model.');
     assert.match(localModelAnswer.provider.note, /No project data was sent/);
-    assert.equal(attempts.length, 2);
+    assert.equal(attempts.length, 0);
     await assert.rejects(
       suggestFileRepair({
         question: 'Fix this',
@@ -107,7 +125,7 @@ async function main() {
       }),
       /No project file was sent to an external provider/
     );
-    assert.equal(attempts.length, 2);
+    assert.equal(attempts.length, 0);
 
     localAi.isInstalled = (kind) => kind === 'vision';
     localAi.complete = async (_messages, _tokens, options) => {
@@ -122,7 +140,7 @@ async function main() {
     );
     assert.equal(visionAnswer.lines[0], 'The screenshot shows a missing runtime.');
     assert.match(visionAnswer.provider.note, /not sent to an external provider/);
-    assert.equal(attempts.length, 2);
+    assert.equal(attempts.length, 0);
 
     localAi.isInstalled = originalIsInstalled;
     localAi.complete = originalComplete;
@@ -154,10 +172,10 @@ async function main() {
     };
     const localGuide = await answerWithAI('How do I open and run this project?', guideContext, false);
     assert.ok(localGuide.lines.some((line) => line.includes('README')));
-    assert.equal(attempts.length, 2);
+    assert.equal(attempts.length, 0);
     await answerWithAI('How do I open and run this project?', guideContext, true);
-    assert.ok(attempts.slice(2).some((attempt) => attempt.body.includes('npm run dev')));
-    assert.ok(attempts.slice(2).every((attempt) => !attempt.body.includes('top-secret-value')));
+    assert.ok(attempts.some((attempt) => attempt.body.includes('npm run dev')));
+    assert.ok(attempts.every((attempt) => !attempt.body.includes('top-secret-value')));
     console.log('ok   scans project launch guidance locally and shares it only with consent');
 
     const selected = readProjectFile(project, 'src/app.js');
@@ -210,7 +228,7 @@ async function main() {
     providers.removeAiProvider(paid.id);
     providers.removeAiProvider(first.id);
     providers.removeAiProvider(second.id);
-    console.log('\nAI assistant self-test: 9/9 checks passed');
+    console.log('\nAI assistant self-test: 10/10 checks passed');
   } finally {
     global.fetch = originalFetch;
     if (originalUserData === undefined) delete process.env.GUITINSTAL_USER_DATA;

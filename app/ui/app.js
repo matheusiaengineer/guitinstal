@@ -127,6 +127,7 @@
     app: 'Application',
     library: 'Library',
     cli: 'CLI tool',
+    'ios-app': 'Apple app · Xcode',
     'web-service': 'Web service',
     unsupported: 'Manual setup',
   };
@@ -356,7 +357,7 @@
 
   function renderRuntimes() {
     const strip = $('#runtimeStrip');
-    const common = ['node', 'npm', 'python', 'docker', 'git', 'go', 'cargo', 'dotnet'];
+    const common = ['node', 'npm', 'python', 'docker', 'git', 'go', 'cargo', 'dotnet', 'xcode'];
     // A tool that is absent is exactly the one the user needs to see, so the
     // strip also lists runtimes outside the common set (composer, make...).
     const relevant = state.runtimes.filter((runtime) => common.includes(runtime.id) || !runtime.available);
@@ -429,6 +430,7 @@
 
   function projectCard(project) {
     const running = Boolean(project.pid);
+    const hasXcodeProject = Boolean(project.xcodeProjectFile) || project.stack === 'xcode';
     const verify = project.verify;
     const statusTag = running
       ? '<span class="tag green">running</span>'
@@ -445,7 +447,11 @@
     const actions = [
       running
         ? `<button class="button button-danger" data-action="stop" data-id="${esc(project.id)}"><svg aria-hidden="true"><use href="#i-x"/></svg> Stop</button>`
-        : `<button class="button button-ghost" data-action="launch" data-id="${esc(project.id)}"><svg aria-hidden="true"><use href="#i-play"/></svg> Run</button>`,
+        : hasXcodeProject
+          ? state.platform === 'darwin'
+            ? `<button class="button button-primary" data-action="open-xcode" data-id="${esc(project.id)}"><svg aria-hidden="true"><use href="#i-code"/></svg> Open in Xcode</button>`
+            : ''
+          : `<button class="button button-ghost" data-action="launch" data-id="${esc(project.id)}"><svg aria-hidden="true"><use href="#i-play"/></svg> Run</button>`,
       running && project.localUrl
         ? `<button class="button button-primary" data-action="browse" data-id="${esc(project.id)}"><svg aria-hidden="true"><use href="#i-arrow-up-right"/></svg> Open app</button>`
         : '',
@@ -483,6 +489,7 @@
           ${statusTag}
           ${project.lastCommit ? `<span class="tag">${esc(project.lastCommit)}</span>` : ''}
           ${project.branch ? `<span class="tag">${esc(project.branch)}</span>` : ''}
+          ${hasXcodeProject && state.platform !== 'darwin' ? '<span class="tag amber">Open on a Mac with Xcode</span>' : ''}
         </div>
         <div class="card-path">${esc(project.dir)}</div>
         <div class="card-actions">${actions}</div>
@@ -950,13 +957,14 @@
 
   // The panel answers from evidence the server already holds, so it needs to know
   // which context the user is looking at: the plan just analyzed, or one project.
-  const ask = { context: null };
+  const ask = { context: null, history: [] };
   let aiProviders = [];
   let localAiStatus = null;
   let repairProposal = null;
 
   function setAskContext(context, label) {
     ask.context = context;
+    ask.history = [];
     $('#askScope').textContent = label;
     $('#askAnswer').innerHTML = '';
     $('#repairPanel').hidden = !context?.projectId;
@@ -978,28 +986,44 @@
     try {
       const result = await api('/api/assistant', {
         method: 'POST',
-        body: { question, ...(ask.context || {}), useAI: $('#askSendContext').checked },
+        body: { question, history: ask.history, ...(ask.context || {}), useAI: $('#askSendContext').checked },
       });
-      showAssistantAnswer(result.answer);
+      showAssistantAnswer(result.answer, question);
     } catch (error) {
-      list.innerHTML = `<li class="ask-line">${esc(error.message)}</li>`;
+      const item = document.createElement('li');
+      item.className = 'ask-line';
+      item.textContent = error.message;
+      list.append(item);
     } finally {
       button.disabled = false;
     }
   }
 
-  function showAssistantAnswer(answer) {
+  function showAssistantAnswer(answer, question) {
     $('#askProviderNote').textContent = answer.provider.note;
     if (answer.scope) $('#askScope').textContent = answer.scope;
-    $('#askAnswer').innerHTML =
-      `<li class="ask-title">${esc(answer.title)}</li>` +
-      answer.lines
-        .map((line) => {
-          const isSub = /^\s{2,}/.test(line);
-          const text = line.replace(/^-\s+/, '').trim();
-          return `<li class="${isSub ? 'ask-sub' : 'ask-line'}">${esc(text)}</li>`;
-        })
-        .join('');
+    const list = $('#askAnswer');
+    const prompt = document.createElement('li');
+    prompt.className = 'ask-question';
+    prompt.textContent = question;
+    list.append(prompt);
+
+    const title = document.createElement('li');
+    title.className = 'ask-title';
+    title.textContent = answer.title;
+    list.append(title);
+    for (const line of answer.lines) {
+      const item = document.createElement('li');
+      item.className = /^\s{2,}/.test(line) ? 'ask-sub' : 'ask-line';
+      item.textContent = line.replace(/^-\s+/, '').trim();
+      list.append(item);
+    }
+
+    ask.history.push(
+      { role: 'user', content: question },
+      { role: 'assistant', content: answer.lines.join('\n') }
+    );
+    ask.history = ask.history.slice(-12);
   }
 
   async function askAboutScreen() {
@@ -1052,7 +1076,7 @@
         method: 'POST',
         body: { question, ...(ask.context || {}), imageDataUrl, useAI: false },
       });
-      showAssistantAnswer(result.answer);
+      showAssistantAnswer(result.answer, question);
     } catch (error) {
       $('#askAnswer').innerHTML = `<li class="ask-line">${esc(error.message || 'Screen capture was cancelled.')}</li>`;
     } finally {
@@ -1385,11 +1409,33 @@
   // user can start right now, and the plan is already on this screen.
   function simpleStartHtml(preflight) {
     const guides = (preflight?.installGuides || []).filter((guide) => guide.url);
-    if (!guides.length) {
+    const linuxCommands = preflight?.linuxInstallCommands || [];
+    if (!guides.length && !linuxCommands.length) {
       return '<div class="simple-console"><strong>Nothing runs without your approval.</strong><span>Review the steps above. Advanced mode shows the exact commands and raw output.</span></div>';
     }
     const links = guides.map((guide) => `<a href="${esc(guide.url)}" target="_blank" rel="noreferrer">${esc(guide.id)}</a>`).join(', ');
-    return `<div class="simple-console"><strong>Something this project needs is not installed here.</strong><span>Install ${links}, press "Re-check tools" and run the step again. GUITinstal reads the Windows PATH again at that moment, so no restart is needed.</span></div>`;
+    const needsXcode = guides.some((guide) => guide.id === 'xcode');
+    const linkHelp = needsXcode && state.platform !== 'darwin'
+      ? '<span>Xcode only runs on macOS. GUITinstal can save the source here; open it on a Mac with Xcode to build or sign it.</span>'
+      : links
+        ? `<span>For anything not covered below, install ${links}, then press "Re-check tools".</span>`
+        : '';
+    const nextStep = needsXcode && state.platform !== 'darwin'
+      ? ''
+      : '<span>After installation, press "Re-check tools" and continue. GUITinstal scans the current PATH again.</span>';
+    const terminalHelp = linuxCommands.length
+      ? `<div class="linux-install-guide"><strong>Linux terminal setup</strong><span>Choose only the command for your distribution. GUITinstal will not run it; your package manager will ask for permission before changing system packages.</span>${linuxCommands
+          .map(
+            (item) =>
+              `<div class="linux-install-command"><b>${esc(item.label)}</b><code>${esc(item.command)}</code>${
+                item.uncovered.length
+                  ? `<small>Still use the official link above for: ${esc(item.uncovered.join(', '))}.</small>`
+                  : ''
+              }</div>`
+          )
+          .join('')}</div>`
+      : '';
+    return `<div class="simple-console"><strong>Something this project needs is not installed here.</strong>${linkHelp}${nextStep}${terminalHelp}</div>`;
   }
 
   function setTerminalMode(mode) {
@@ -1923,7 +1969,16 @@
       } else if (action === 'open') {
         const result = await api(`/api/projects/${encodeURIComponent(id)}/open`, { method: 'POST' });
         if (result.ok) toast('Folder opened', 'The project folder is open in your file manager.', 'success');
-        else toast('Could not open folder', 'The folder no longer exists or Windows could not open it.', 'error');
+        else toast('Could not open folder', 'The folder no longer exists or the system could not open it.', 'error');
+      } else if (action === 'open-xcode') {
+        const result = await api(`/api/projects/${encodeURIComponent(id)}/xcode`, { method: 'POST' });
+        if (result.ok) {
+          toast(
+            'Project opened in Xcode',
+            'Choose the scheme and signing team in Xcode. GUITinstal does not build or sign iOS apps automatically.',
+            'success'
+          );
+        }
       } else if (action === 'terminal') {
         const result = await api(`/api/projects/${encodeURIComponent(id)}/terminal`, { method: 'POST' });
         if (result.ok) toast('Terminal opened', 'A terminal was opened in the project folder.', 'success');
@@ -2087,6 +2142,12 @@
   $('#askForm').addEventListener('submit', (event) => {
     event.preventDefault();
     askQuestion();
+  });
+  $('#askClear').addEventListener('click', () => {
+    ask.history = [];
+    $('#askAnswer').replaceChildren();
+    $('#askProviderNote').textContent =
+      'The guide scans this project’s manifests, launch settings, README instructions, and local logs. External providers are used only if you opt in.';
   });
 
   $('#repairConsent').addEventListener('change', updateRepairButton);

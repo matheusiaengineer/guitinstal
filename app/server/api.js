@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { spawn } = require('node:child_process');
+const { execFile, spawn } = require('node:child_process');
 
 const {
   addFavorite,
@@ -51,6 +51,7 @@ const { adapterIds, describe: describeTool, supportedIds } = require('../core/ru
 const { parseRepoUrl, safeDirName } = require('../core/repo-url');
 const { describeLocalRepo, insideDir, localDetection, samePath, scanWorkspace } = require('../core/workspace');
 const { effectivePath, resolveTool, runtimeStatus } = require('../core/tools');
+const { findXcodeProject } = require('../core/xcode');
 const { currentBranch, isGitRepo, localHead, pull, remoteHead } = require('../core/git');
 const { checkDiskSpace } = require('../core/disk');
 const { verifyInstall, verifyProject } = require('../core/verify');
@@ -120,6 +121,29 @@ async function openFolder(dir) {
   } catch {
     return false;
   }
+}
+
+async function openInXcode(project) {
+  if (process.platform !== 'darwin') {
+    throw new Error('Opening an Apple project in Xcode requires macOS.');
+  }
+  const settings = getSettings();
+  if (!insideDir(settings.workspace, project.dir)) {
+    throw new Error('The project folder is outside the GUITinstal workspace.');
+  }
+  const target = findXcodeProject(project.dir);
+  if (!target) throw new Error('No Xcode workspace or project was found in this repository.');
+  const xcode = (await runtimeStatus({ refresh: true })).find((item) => item.id === 'xcode');
+  if (!xcode?.available) {
+    throw new Error('Install Xcode from Apple, open it once to finish setup, then try again.');
+  }
+  await new Promise((resolve, reject) => {
+    execFile('open', ['-a', 'Xcode', target.path], { timeout: 15000 }, (error) => {
+      if (error) reject(new Error(`Xcode could not open this project: ${error.message}`));
+      else resolve();
+    });
+  });
+  return { ok: true, target: target.relative };
 }
 
 /**
@@ -265,6 +289,7 @@ async function registerProject(run, { phase = 'final', runStatus = 'done' } = {}
     avatarUrl: repo.ownerAvatar || '',
     stack: stack.id,
     stackLabel: stack.label,
+    xcodeProjectFile: run.plan.xcodeProjectFile || '',
     dir: directory,
     workspace: run.workspace,
     launch,
@@ -527,6 +552,7 @@ async function importWorkspaceProject(directory) {
     language: remote?.language || previous?.language || '',
     stack: detectedStack,
     stackLabel: info.stack !== 'unknown' ? info.stackLabel : remote?.language || previous?.stackLabel || 'Generic project',
+    xcodeProjectFile: info.xcodeProjectFile || '',
     dir,
     workspace: settings.workspace,
     launch: null,
@@ -771,8 +797,12 @@ const routes = [
         // The launcher may have died on its own: do not show it as running.
         if (isProcessAlive(project.pid)) return project;
         return markInstalled(project, { stoppedAt: new Date().toISOString() });
-      });
+      }).map((project) => ({
+        ...project,
+        xcodeProjectFile: findXcodeProject(project.dir)?.relative || '',
+      }));
       return {
+        platform: process.platform,
         settings: publicSettings(settings),
         projects,
         runtimes: await runtimeStatus(),
@@ -792,8 +822,7 @@ const routes = [
     method: 'POST',
     path: /^\/api\/runtimes\/refresh$/,
     handler: async () => {
-      // A runtime installed while the app was open is invisible to a running
-      // Windows process until the registry PATH is read again.
+      // Re-scan PATH so tools installed while the app was open become visible.
       const runtimes = await runtimeStatus({ refresh: true });
       return {
         runtimes,
@@ -1021,6 +1050,25 @@ const routes = [
       const body = await readJsonBody(req);
       const question = String(body.question || '').trim().slice(0, 300);
       if (!question) throw new Error('Type what you want to know about this project.');
+      const history = body.history === undefined ? [] : body.history;
+      if (!Array.isArray(history) || history.length > 12) {
+        throw new Error('Conversation history must contain at most six user/assistant exchanges.');
+      }
+      const conversation = history.map((turn) => {
+        if (
+          !turn ||
+          !['user', 'assistant'].includes(turn.role) ||
+          typeof turn.content !== 'string' ||
+          !turn.content.trim() ||
+          turn.content.length > 1800
+        ) {
+          throw new Error('Conversation history contains an invalid message.');
+        }
+        return { role: turn.role, content: turn.content.trim() };
+      });
+      if (conversation.some((turn, index) => turn.role !== (index % 2 === 0 ? 'user' : 'assistant'))) {
+        throw new Error('Conversation history must alternate between user and assistant messages.');
+      }
 
       let context = {};
       if (body.projectId) {
@@ -1054,7 +1102,7 @@ const routes = [
         throw new Error('The screenshot is too large. Capture a smaller image and try again.');
       }
       return {
-        answer: await answerWithAI(question, context, body.useAI === true, imageDataUrl),
+        answer: await answerWithAI(question, context, body.useAI === true, imageDataUrl, conversation),
         question,
       };
     },
@@ -1470,6 +1518,11 @@ const routes = [
       const ok = await openFolder(project.dir);
       return { ok };
     },
+  },
+  {
+    method: 'POST',
+    path: /^\/api\/projects\/([\w-]+)\/xcode$/,
+    handler: async (req, params) => openInXcode(findProject(params[0])),
   },
   {
     method: 'DELETE',

@@ -250,6 +250,28 @@ function detectMake(entries) {
   };
 }
 
+function detectXcode(entries) {
+  const paths = entries.map((entry) => entry.path);
+  const workspaces = paths
+    .filter((file) => /\.xcworkspace\/contents\.xcworkspacedata$/i.test(file))
+    .map((file) => file.slice(0, file.toLowerCase().indexOf('.xcworkspace/') + '.xcworkspace'.length))
+    .sort();
+  const projects = paths
+    .filter((file) => /\.xcodeproj\/project\.pbxproj$/i.test(file))
+    .map((file) => file.slice(0, file.toLowerCase().lastIndexOf('.xcodeproj') + '.xcodeproj'.length))
+    .sort();
+  const projectFile = workspaces[0] || projects[0] || '';
+  if (!projectFile) return null;
+  return {
+    stack: 'xcode',
+    label: 'Apple Xcode project',
+    confidence: 'high',
+    markers: [projectFile],
+    runtimes: ['xcode'],
+    projectFile,
+  };
+}
+
 const DETECTORS = [
   detectNode,
   detectDocker,
@@ -260,6 +282,7 @@ const DETECTORS = [
   detectRuby,
   detectDotnet,
   detectPython,
+  detectXcode,
   detectMake,
 ];
 
@@ -281,7 +304,7 @@ function detectStack(entries, manifests = {}) {
   // When a repository carries several manifests, the stack that actually runs
   // the application wins: package.json is asset tooling for a Laravel, Rails,
   // Go or .NET project, not the thing that has to be installed.
-  const order = ['php', 'ruby', 'dotnet', 'java', 'go', 'rust', 'node', 'python', 'docker', 'make'];
+  const order = ['php', 'ruby', 'dotnet', 'java', 'go', 'rust', 'node', 'python', 'docker', 'xcode', 'make'];
   found.sort((a, b) => order.indexOf(a.stack) - order.indexOf(b.stack));
 
   const primary = found[0] || null;

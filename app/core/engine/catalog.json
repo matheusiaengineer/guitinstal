@@ -121,6 +121,13 @@
         "make",
         "msys2"
       ]
+    },
+    {
+      "id": "apple",
+      "label": "Apple development",
+      "runtimes": [
+        "xcode"
+      ]
     }
   ],
   "runtimes": [
@@ -2040,6 +2047,62 @@
       "requiresReboot": false,
       "needs": [],
       "status": "catalogued"
+    },
+    {
+      "id": "xcode",
+      "label": "Xcode",
+      "ecosystem": "apple",
+      "summary": "Apple's IDE and build tools for iOS, iPadOS, macOS and Swift projects.",
+      "versions": {
+        "supported": "current release",
+        "policy": "installed and updated through Apple"
+      },
+      "officialSource": "https://developer.apple.com/xcode/",
+      "download": {
+        "kind": "none",
+        "url": "https://developer.apple.com/xcode/",
+        "resolvedAtRuntime": false
+      },
+      "platforms": {
+        "win32": {
+          "x64": "external",
+          "arm64": "external"
+        },
+        "darwin": {
+          "x64": "full",
+          "arm64": "full"
+        },
+        "linux": {
+          "x64": "external",
+          "arm64": "external"
+        }
+      },
+      "installerFormat": "none",
+      "checksum": {
+        "algorithm": "",
+        "published": false,
+        "where": ""
+      },
+      "signature": {
+        "kind": "",
+        "verified": false,
+        "where": ""
+      },
+      "destination": "Installed by Apple outside GUITinstal",
+      "versionCommand": {
+        "command": "xcodebuild",
+        "args": [
+          "-version"
+        ]
+      },
+      "verification": "run xcodebuild -version",
+      "uninstall": "Remove Xcode using Apple's supported instructions",
+      "installMode": "guided",
+      "requiresAdmin": false,
+      "requiresReboot": false,
+      "needs": [],
+      "status": "external",
+      "reason": "Xcode runs only on macOS. GUITinstal can save the project elsewhere, but opening and building it requires a Mac with Xcode."
     }
   ],
   "stacks": {
@@ -2235,6 +2298,18 @@
       "manifests": [
         "Makefile",
         "makefile"
+      ],
+      "lockfiles": []
+    },
+    "xcode": {
+      "label": "Apple Xcode project",
+      "runtimes": [
+        "xcode"
+      ],
+      "packageManagers": [],
+      "manifests": [
+        "*.xcodeproj/project.pbxproj",
+        "*.xcworkspace/contents.xcworkspacedata"
       ],
       "lockfiles": []
     }

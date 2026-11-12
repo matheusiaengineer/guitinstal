@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#050505">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GUITinstal">
   <meta name="description" content="GUITinstal is a free desktop app that reads a GitHub repository, detects the stack, shows an installation plan and runs each command only after you approve it.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="GUITinstal — from GitHub URL to running project">
@@ -11,6 +14,7 @@
   <meta property="og:image" content="assets/screenshots/analise-1440.png">
   <link rel="icon" type="image/png" href="assets/icon.png">
   <link rel="apple-touch-icon" href="assets/icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <title>GUITinstal — Open Source. Made Simple.</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -84,6 +88,7 @@
         <article class="feature-card searchable" data-search="project management organize launch update workspace guide readme start scripts"><div class="feature-icon"><svg><use href="#i-layers"/></svg></div><h3>All your projects</h3><p>Organize your local projects and use Guide to understand how each one starts.</p></article>
         <article class="feature-card searchable" data-search="secure safe review commands permissions control"><div class="feature-icon"><svg><use href="#i-shield"/></svg></div><h3>Safe by design</h3><p>Review installation steps and stay in control of what runs.</p></article>
         <article class="feature-card searchable" data-search="cross platform windows macos linux desktop"><div class="feature-icon"><svg><use href="#i-monitor"/></svg></div><h3>Made for your OS</h3><p>Platform downloads appear when that system's installer is available; source-based options are documented too.</p></article>
+        <article class="feature-card searchable" data-search="ios iphone ipad mobile install pwa github repository guide"><div class="feature-icon"><svg><use href="#i-apple"/></svg></div><h3>Mobile project guide</h3><p>On iPhone or iPad, open this site in Safari and choose Share → Add to Home Screen to inspect public GitHub projects. Installing and running local files remains a desktop-app feature.</p></article>
       </section>
 
       <section class="workflow section-wrap" id="how-it-works">
@@ -168,9 +173,9 @@
 
       <section class="partners-section section-wrap" id="partners" aria-labelledby="partnersTitle">
         <div class="partners-head">
-          <span class="section-kicker">SUPPORTERS &amp; PARTNERS</span>
-          <h2 id="partnersTitle">The people and companies <span>backing the project.</span></h2>
-          <p>Creators who teach people to install open source, and companies that sponsor the work. Every name on this page is listed with permission — nothing is bought, nothing is invented.</p>
+          <span class="section-kicker">VERIFIED PARTNERS &amp; INTEGRATIONS</span>
+          <h2 id="partnersTitle">Real partnerships. <span>Clear integrations.</span></h2>
+          <p>This area lists confirmed partners and real integrations. Every partnership appears only with permission; integrations are identified separately and never presented as endorsements.</p>
         </div>
 
         <div class="partner-grid" id="partnerGrid" hidden></div>
@@ -178,14 +183,13 @@
         <div class="partner-empty" id="partnerEmpty">
           <span class="empty-mark"><svg><use href="#i-users"/></svg></span>
           <h3>No partner announced yet</h3>
-          <p>The first cohort opens in Portugal (PT) and then worldwide: creators and companies that help people get from a repository link to a running project.</p>
-          <a class="button button-outline" id="partnerApply" href="#download">Apply to the program <svg><use href="#i-arrow-up-right"/></svg></a>
-          <p class="empty-note" id="partnerNote">Creator or company? Applications open with the public repository.</p>
+          <p>Partnerships will appear here after they are confirmed. There is no partner application form live yet.</p>
         </div>
 
         <div class="partner-built">
           <h3 id="builtWithTitle">Built with</h3>
           <p class="partner-built-note">Open-source projects GUITinstal depends on, listed because they are real dependencies — not sponsors.</p>
+          <p class="partner-built-note">The app currently integrates with GitHub’s public API and supports optional, user-configured OpenAI-compatible AI endpoints. This does not imply sponsorship or endorsement; no direct partnership with OpenAI, Anthropic, Google or Microsoft has been announced.</p>
           <div class="built-grid" id="builtGrid"></div>
         </div>
 
@@ -226,13 +230,14 @@
         <button type="button" data-guide-question="How do I open a project?">Open a project</button>
         <button type="button" data-guide-question="Does the app send my code to AI?">Privacy</button>
         <button type="button" data-guide-question="How do Linux downloads work?">Linux</button>
+        <button type="button" data-guide-question="How do I analyze a public GitHub repository?">Analyze a repo</button>
       </div>
       <form class="guide-form" id="guideForm">
         <label class="sr-only" for="guideInput">Ask the GUITinstal Guide</label>
-        <input id="guideInput" type="text" maxlength="300" autocomplete="off" placeholder="Ask about GUITinstal…">
+        <input id="guideInput" type="text" maxlength="300" autocomplete="off" placeholder="Ask or paste a public GitHub URL…">
         <button class="button button-light" type="submit">Ask</button>
       </form>
-      <p class="guide-disclosure">Instant answers from this site’s help guide. No chat is sent or stored. For project-specific help, use Guide in the desktop app.</p>
+      <p class="guide-disclosure">Help answers are local to this page and chat is not stored. When you paste a public GitHub URL, only that URL is sent to GitHub’s public API to read repository metadata and its public README; no code is run and no AI provider is contacted. Use the desktop Guide for local projects.</p>
       <a class="guide-doc-link" href="download.html">See downloads &amp; install guide <svg><use href="#i-arrow-up-right"/></svg></a>
     </section>
     <button class="guide-toggle" id="guideToggle" type="button" aria-label="Open GUITinstal chat" aria-expanded="false" aria-controls="guidePanel">

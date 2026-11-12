@@ -51,7 +51,7 @@ function repoFor(name) {
 function planFor({ name, files, manifests, available = [] }) {
   const entries = files.map((file) => ({ path: file, size: 128 }));
   const detection = detectStack(entries, manifests);
-  const runtimes = ['git', 'node', 'npm', 'python', 'go', 'uv', 'bun', 'java', 'maven', 'cargo', 'php', 'composer', 'bundle', 'dotnet', 'docker', 'make'].map(
+  const runtimes = ['git', 'node', 'npm', 'python', 'go', 'uv', 'bun', 'java', 'maven', 'cargo', 'php', 'composer', 'bundle', 'dotnet', 'docker', 'make', 'xcode'].map(
     (id) => ({ id, available: available.includes(id) })
   );
   const plan = buildPlan({
@@ -223,6 +223,19 @@ console.log('--------------------------');
   );
   record('every plan step is shaped for the runner', shaped, plan.steps.map((step) => step.id).join(' > '));
   record('the plan carries one compatibility object', Boolean(plan.compatibility?.verdict), plan.compatibility?.verdict || '');
+}
+
+// 9. Xcode repositories are saved on every platform, then opened in Xcode on Mac.
+{
+  const { plan } = planFor({
+    name: 'ios-app',
+    files: ['ios/GUITinstal.xcworkspace/contents.xcworkspacedata', 'ios/GUITinstal.xcodeproj/project.pbxproj'],
+    manifests: {},
+  });
+  record('an iOS repository is identified as an Apple app', plan.stack.id === 'xcode' && plan.kind === 'ios-app', `${plan.stack.id}:${plan.kind}`);
+  record('the shared Xcode workspace is selected', plan.xcodeProjectFile === 'ios/GUITinstal.xcworkspace', plan.xcodeProjectFile);
+  record('a missing Xcode does not block saving the repository', !plan.blocked && plan.compatibility.verdict === 'guided', plan.compatibility.verdict);
+  record('GUITinstal does not fake an iOS build step', plan.steps.every((step) => !['build', 'launch'].includes(step.id)), ids(plan).join(' > '));
 }
 
 const failed = results.filter((item) => !item.ok);

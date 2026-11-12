@@ -586,6 +586,12 @@ html.light-mode .step-command { color: #17457f; }
 .simple-console { min-height: 90px; display: grid; align-content: center; gap: 7px; font-family: var(--sans); }
 .simple-console strong { font-size: 15px; color: var(--text); }
 .simple-console span { color: var(--muted); line-height: 1.5; }
+.linux-install-guide { display: grid; gap: 10px; margin-top: 8px; }
+.linux-install-guide > strong { font-size: 13px; }
+.linux-install-guide > span,.linux-install-command small { color: var(--muted); font-size: 11px; line-height: 1.45; }
+.linux-install-command { display: grid; gap: 5px; padding: 9px; border: 1px solid var(--line); border-radius: 8px; }
+.linux-install-command b { font-size: 11px; }
+.linux-install-command code { color: var(--text); font: 11px/1.5 var(--mono); overflow-wrap: anywhere; user-select: text; }
 .console-head .spacer { flex: 1; }
 .console-head svg { width: 16px; height: 16px; color: var(--muted-2); }
 
@@ -887,9 +893,24 @@ select.text-input { height: 42px; }
 .ask-answer {
   list-style: none;
   margin: 12px 0 0;
+  max-height: 420px;
   padding: 0;
   display: grid;
   gap: 6px;
+  overflow: auto;
+}
+
+.ask-question {
+  margin-top: 12px;
+  justify-self: end;
+  max-width: 90%;
+  padding: 8px 11px;
+  border-radius: 12px 12px 2px 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .ask-title {
